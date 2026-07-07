@@ -1,0 +1,157 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-07 23:10:58.200202",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_tghi",
+  "item_code",
+  "item_name",
+  "brand",
+  "alias",
+  "qty",
+  "uom",
+  "material_section_section",
+  "material_rate",
+  "material_percentage",
+  "column_break_o9gk",
+  "item_price",
+  "item_price_rate",
+  "labor_section_section",
+  "labor_rate",
+  "labor_percentage",
+  "total_section_section",
+  "amount_material",
+  "amount_labor"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_tghi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.brand",
+   "fieldname": "brand",
+   "fieldtype": "Link",
+   "label": "Brand",
+   "options": "Brand",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:parent.analysis_type == \"Composite\"",
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "label": "Qty"
+  },
+  {
+   "fetch_from": "item_code.stock_uom",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM",
+   "reqd": 1
+  },
+  {
+   "fieldname": "material_rate",
+   "fieldtype": "Currency",
+   "label": "Material Rate"
+  },
+  {
+   "fieldname": "material_percentage",
+   "fieldtype": "Percent",
+   "label": "Material Percentage"
+  },
+  {
+   "fieldname": "labor_rate",
+   "fieldtype": "Currency",
+   "label": "Labor Rate"
+  },
+  {
+   "fieldname": "labor_percentage",
+   "fieldtype": "Percent",
+   "label": "Labor Percentage"
+  },
+  {
+   "fieldname": "material_section_section",
+   "fieldtype": "Section Break",
+   "label": "Material Section"
+  },
+  {
+   "fieldname": "labor_section_section",
+   "fieldtype": "Section Break",
+   "label": "Labor Section"
+  },
+  {
+   "fieldname": "total_section_section",
+   "fieldtype": "Section Break",
+   "label": "Total Section"
+  },
+  {
+   "fieldname": "amount_material",
+   "fieldtype": "Currency",
+   "label": "Amount Material"
+  },
+  {
+   "fieldname": "amount_labor",
+   "fieldtype": "Currency",
+   "label": "Amount Labor"
+  },
+  {
+   "depends_on": "eval:parent.analysis_type == \"Simple\"",
+   "description": "<p style=\"color:#ff0000; font-weight:400; font-size:12px;\">\n    Change the alias to match the corresponding BOQ item for the customer.\n</p>",
+   "fieldname": "alias",
+   "fieldtype": "Data",
+   "label": "Alias",
+   "mandatory_depends_on": "eval:parent.analysis_type == \"Simple\""
+  },
+  {
+   "fieldname": "column_break_o9gk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_price",
+   "fieldtype": "Link",
+   "label": "Item Price",
+   "options": "Item Price"
+  },
+  {
+   "fetch_from": "item_price.price_list_rate",
+   "fieldname": "item_price_rate",
+   "fieldtype": "Currency",
+   "label": "Item Price Rate",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-08 01:38:36.514652",
+ "modified_by": "Administrator",
+ "module": "NIC Custom App",
+ "name": "Work Analysis Component",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
