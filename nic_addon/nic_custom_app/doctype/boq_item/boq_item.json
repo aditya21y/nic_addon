@@ -1,0 +1,176 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "creation": "2026-07-12 22:21:38.652660",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_qizq",
+  "item_code",
+  "alias",
+  "column_break_2063",
+  "volume",
+  "uom",
+  "type_section_section",
+  "group_label",
+  "description",
+  "column_break_so1y",
+  "source_type",
+  "total_section_section",
+  "net_material",
+  "net_labor",
+  "section_break_ji4e",
+  "margin_category",
+  "material_margin",
+  "labor_margin",
+  "column_break_sh26",
+  "sell_material_rate",
+  "sell_labor_rate",
+  "section_break_rlst",
+  "amount",
+  "cost_amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_qizq",
+   "fieldtype": "Section Break",
+   "label": "Item Section"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "alias",
+   "fieldtype": "Data",
+   "label": "Alias"
+  },
+  {
+   "fieldname": "column_break_2063",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "volume",
+   "fieldtype": "Float",
+   "label": "Volume"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "Uom",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "type_section_section",
+   "fieldtype": "Section Break",
+   "label": "Type Section"
+  },
+  {
+   "fieldname": "group_label",
+   "fieldtype": "Data",
+   "label": "Group Label"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "column_break_so1y",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_type",
+   "fieldtype": "Link",
+   "label": "Source Type",
+   "options": "Work Analysis"
+  },
+  {
+   "fieldname": "total_section_section",
+   "fieldtype": "Section Break",
+   "label": "Total Section"
+  },
+  {
+   "fieldname": "net_material",
+   "fieldtype": "Currency",
+   "label": "Net Material"
+  },
+  {
+   "fieldname": "net_labor",
+   "fieldtype": "Currency",
+   "label": "Net Labor"
+  },
+  {
+   "fieldname": "section_break_ji4e",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "margin_category",
+   "fieldtype": "Int",
+   "label": "Margin Category"
+  },
+  {
+   "fieldname": "material_margin",
+   "fieldtype": "Percent",
+   "label": "Material Margin",
+   "read_only": 1
+  },
+  {
+   "fieldname": "labor_margin",
+   "fieldtype": "Percent",
+   "label": "Labor Margin",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sh26",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sell_material_rate",
+   "fieldtype": "Currency",
+   "label": "Sell Material Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sell_labor_rate",
+   "fieldtype": "Currency",
+   "label": "Sell Labor Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_rlst",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cost_amount",
+   "fieldtype": "Currency",
+   "label": "Cost Amount",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-12 23:00:20.113737",
+ "modified_by": "Administrator",
+ "module": "NIC Custom App",
+ "name": "Boq Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

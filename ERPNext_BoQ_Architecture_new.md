@@ -210,12 +210,9 @@ This is the performance keystone: each section holds ~100–250 lines in a child
 
 | Field | Type | Notes |
 |---|---|---|
-| boq | Link BoQ | |
-| discipline | Select | EL / FF / PL |
-| building | Data | Asrama / Sekolah / Masjid / Utilitas |
+| project | Link Project | |
 | section_name | Data | "Pekerjaan Elektrikal – Asrama" |
-| sort_order | Int | |
-| subtotal_cost / subtotal_sell | Currency, read-only | |
+| subtotal | Currency, read-only | |
 | items | Table → `BoQ Item` | the lines |
 
 #### `BoQ Item` (child of `BoQ Section`) — the BoQ line
@@ -254,12 +251,6 @@ This is the performance keystone: each section holds ~100–250 lines in a child
 | **sell_labor_rate** | Currency, read-only | `roundup(net_labor/(1−labor_margin))` |
 | **amount** | Currency, read-only | `(sell_material+sell_labor) × volume` |
 | **cost_amount** | Currency, read-only | `(net_material+net_labor) × volume` |
-| takeoff_ref | Link Quantity Takeoff | optional source of `volume` |
-
-#### `Quantity Takeoff` (custom — the `Hit.*` sheets; optional, recommended)
-Auditable volume calc. Header + child `Takeoff Line` (`description`, `length`, `count`, `factor`, `result_qty`, `maps_to_description`). A `BoQ Item.volume` can fetch from here so quantities are traceable, not hardcoded.
-
-> **📍 Excel source:** the `Hit.HVAC`, `Hit.PL`, `Hit.Kabel`, `Hit.PK` sheets — your **quantity takeoff / "hitungan" calculations**. These are where your volumes (cable meters, pipe lengths, counts) are worked out before they feed column `F` of a building sheet. Optional for phase 1 (you can just type the volume), but worth it later so the numbers are traceable instead of hardcoded.
 
 #### `Direct Cost` (custom — feeds APP.2)
 Header + child lines grouped: Persiapan/Direksi Kit, Mob-Demob/Perizinan/Test-Com, Alat/K3/APD, Management Proyek. Mirrors `Direct Cost` sheet rows `R41/R72/R81/R102`.
