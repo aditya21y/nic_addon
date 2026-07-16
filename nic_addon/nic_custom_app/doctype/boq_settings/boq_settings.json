@@ -1,0 +1,126 @@
+{
+ "actions": [],
+ "creation": "2026-07-16 13:05:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "defaults_section",
+  "default_ppn_percent",
+  "default_x_factor",
+  "default_dp_percent",
+  "column_break_defaults",
+  "sell_rate_precision",
+  "financing_section",
+  "bunga_kmk",
+  "pph",
+  "bank_garansi",
+  "column_break_financing",
+  "jaminan",
+  "asuransi"
+ ],
+ "fields": [
+  {
+   "fieldname": "defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Defaults"
+  },
+  {
+   "default": "11",
+   "description": "PPN applied to the offer (APP.1 subtotal).",
+   "fieldname": "default_ppn_percent",
+   "fieldtype": "Percent",
+   "label": "Default PPN %"
+  },
+  {
+   "default": "2.5",
+   "description": "X-Factor added to APP.2 (share of the offer).",
+   "fieldname": "default_x_factor",
+   "fieldtype": "Percent",
+   "label": "Default X-Factor %"
+  },
+  {
+   "default": "10",
+   "description": "Down payment %; base for Bank Garansi & Jaminan (incl. PPN).",
+   "fieldname": "default_dp_percent",
+   "fieldtype": "Percent",
+   "label": "Default DP %"
+  },
+  {
+   "fieldname": "column_break_defaults",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "2",
+   "description": "Decimal places for ROUNDUP of the BoQ sell rates.",
+   "fieldname": "sell_rate_precision",
+   "fieldtype": "Int",
+   "label": "Sell Rate Precision"
+  },
+  {
+   "fieldname": "financing_section",
+   "fieldtype": "Section Break",
+   "label": "APP.3 Financing"
+  },
+  {
+   "default": "5",
+   "fieldname": "bunga_kmk",
+   "fieldtype": "Percent",
+   "label": "Bunga KMK / SCF %"
+  },
+  {
+   "default": "2.65",
+   "fieldname": "pph",
+   "fieldtype": "Percent",
+   "label": "PPH %"
+  },
+  {
+   "default": "5",
+   "description": "Terhadap DP (DP incl. PPN).",
+   "fieldname": "bank_garansi",
+   "fieldtype": "Percent",
+   "label": "Bank Garansi %"
+  },
+  {
+   "fieldname": "column_break_financing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1.5",
+   "description": "Terhadap DP (DP incl. PPN).",
+   "fieldname": "jaminan",
+   "fieldtype": "Percent",
+   "label": "Jaminan Pelaksanaan %"
+  },
+  {
+   "default": "0.5",
+   "fieldname": "asuransi",
+   "fieldtype": "Percent",
+   "label": "Asuransi (EAR/CAR) %"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-16 13:05:00.000000",
+ "modified_by": "Administrator",
+ "module": "NIC Custom App",
+ "name": "BoQ Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,243 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-16 13:35:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_head",
+  "naming_series",
+  "project",
+  "boq_name",
+  "location",
+  "revision",
+  "column_break_head",
+  "date",
+  "status",
+  "schedule_months",
+  "params_section",
+  "ppn_percent",
+  "dp_percent",
+  "x_factor",
+  "column_break_params",
+  "direct_cost",
+  "recap_section",
+  "recap",
+  "totals_section",
+  "subtotal_cost",
+  "subtotal_offer",
+  "total_app2",
+  "total_app3",
+  "column_break_totals",
+  "total_app",
+  "total_profit",
+  "offer_with_ppn",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_head",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "BOQ-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "BOQ-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "project.project_name",
+   "fieldname": "boq_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "BoQ Name"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Location"
+  },
+  {
+   "default": "R00",
+   "fieldname": "revision",
+   "fieldtype": "Data",
+   "label": "Revision"
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nFor Approval\nAwarded\nCancelled"
+  },
+  {
+   "description": "Schedule Proyek (Bulan) - RAPP H5.",
+   "fieldname": "schedule_months",
+   "fieldtype": "Int",
+   "label": "Schedule (Months)"
+  },
+  {
+   "fieldname": "params_section",
+   "fieldtype": "Section Break",
+   "label": "Parameters"
+  },
+  {
+   "description": "Default from BoQ Settings.",
+   "fieldname": "ppn_percent",
+   "fieldtype": "Percent",
+   "label": "PPN %"
+  },
+  {
+   "description": "Down payment %. Base for Bank Garansi & Jaminan (incl. PPN).",
+   "fieldname": "dp_percent",
+   "fieldtype": "Percent",
+   "label": "DP %"
+  },
+  {
+   "description": "Default from BoQ Settings.",
+   "fieldname": "x_factor",
+   "fieldtype": "Percent",
+   "label": "X-Factor %"
+  },
+  {
+   "fieldname": "column_break_params",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Preliminaries budget feeding APP.2. Auto-resolved by project if left blank.",
+   "fieldname": "direct_cost",
+   "fieldtype": "Link",
+   "label": "Direct Cost",
+   "options": "Direct Cost"
+  },
+  {
+   "fieldname": "recap_section",
+   "fieldtype": "Section Break",
+   "label": "Recap per Discipline (APP.1 / APP.2 / APP.3)"
+  },
+  {
+   "fieldname": "recap",
+   "fieldtype": "Table",
+   "label": "Recap",
+   "options": "BoQ Recap",
+   "read_only": 1
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "subtotal_cost",
+   "fieldtype": "Currency",
+   "label": "Total Budget (APP.1 cost)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subtotal_offer",
+   "fieldtype": "Currency",
+   "label": "Total Penawaran (excl PPN)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_app2",
+   "fieldtype": "Currency",
+   "label": "Total APP.2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_app3",
+   "fieldtype": "Currency",
+   "label": "Total APP.3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_app",
+   "fieldtype": "Currency",
+   "label": "Total APP",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "total_profit",
+   "fieldtype": "Currency",
+   "label": "Total Profit",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "description": "Penawaran + PPN (RAPP E5).",
+   "fieldname": "offer_with_ppn",
+   "fieldtype": "Currency",
+   "label": "Penawaran + PPN",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "BoQ",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-16 13:35:00.000000",
+ "modified_by": "Administrator",
+ "module": "NIC Custom App",
+ "name": "BoQ",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

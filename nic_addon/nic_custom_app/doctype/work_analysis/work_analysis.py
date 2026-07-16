@@ -13,44 +13,56 @@ class WorkAnalysis(Document):
 		self.calculate_amounts()
 
 	def validate_analysis_code(self):
-		"""A Composite analysis_code must point at a non-stock (service) Item."""
-		if self.analysis_type == "Composite" and self.analysis_code:
-			if frappe.db.get_value("Item", self.analysis_code, "is_stock_item"):
+		"""A Composite analysis_code must be a non-stock Item and must not appear
+		among its own components (an assembly cannot contain itself)."""
+		if self.analysis_type != "Composite" or not self.analysis_code:
+			return
+
+		if frappe.db.get_value("Item", self.analysis_code, "is_stock_item"):
+			frappe.throw(
+				_("Analysis Code {0} must be a non-stock Item (is_stock_item = 0).").format(
+					frappe.bold(self.analysis_code)
+				)
+			)
+
+		for c in self.components:
+			if c.item_code and c.item_code == self.analysis_code:
 				frappe.throw(
-					_("Analysis Code {0} must be a non-stock Item (is_stock_item = 0).").format(
-						frappe.bold(self.analysis_code)
+					_("Row {0}: component cannot be the assembly item {1} itself.").format(
+						c.idx, frappe.bold(self.analysis_code)
 					)
 				)
 
 	def calculate_amounts(self):
-		"""Compute per-component amounts and roll them up into the out_* rates.
+		"""Roll up the out_* rates.
 
-		Item rows (those with an ``item_code``) are ``qty × rate`` — for a Simple
-		analysis the qty is always 1. Percentage rows (no ``item_code``, e.g.
-		"Waste 2%") are ``percentage % × subtotal of the item rows``.
+		Simple    -> one item priced in the header: rate * (1 + pct).
+		Composite -> components build one assembly; each row is qty * rate PLUS
+		             its percentage of the qty * rate subtotal (a "Waste 2%" row
+		             applies against the whole subtotal).
 		"""
-		is_simple = self.analysis_type == "Simple"
+		if self.analysis_type == "Simple":
+			total_material = flt(flt(self.material_rate) * (1 + flt(self.material_percentage) / 100))
+			total_labor = flt(flt(self.labor_rate) * (1 + flt(self.labor_percentage) / 100))
+		else:
+			# First pass: qty × rate subtotals are the bases the percentages apply to.
+			material_base = 0.0
+			labor_base = 0.0
+			for c in self.components:
+				material_base += flt(c.qty) * flt(c.material_rate)
+				labor_base += flt(c.qty) * flt(c.labor_rate)
 
-		# First pass: the qty × rate subtotals are the bases the percentages
-		# apply against (the net material / labor of the components).
-		material_base = 0.0
-		labor_base = 0.0
-		for c in self.components:
-			qty = 1 if is_simple else flt(c.qty)
-			material_base += qty * flt(c.material_rate)
-			labor_base += qty * flt(c.labor_rate)
+			# Second pass: each row is qty × rate PLUS its percentage of the base.
+			for c in self.components:
+				c.amount_material = flt(flt(c.qty) * flt(c.material_rate) + flt(c.material_percentage) / 100 * material_base)
+				c.amount_labor = flt(flt(c.qty) * flt(c.labor_rate) + flt(c.labor_percentage) / 100 * labor_base)
 
-		# Second pass: each row is qty × rate PLUS its percentage of the base.
-		for c in self.components:
-			qty = 1 if is_simple else flt(c.qty)
-			c.amount_material = flt(qty * flt(c.material_rate) + flt(c.material_percentage) / 100 * material_base)
-			c.amount_labor = flt(qty * flt(c.labor_rate) + flt(c.labor_percentage) / 100 * labor_base)
+			total_material = sum(flt(c.amount_material) for c in self.components)
+			total_labor = sum(flt(c.amount_labor) for c in self.components)
 
-		total_material = sum(flt(c.amount_material) for c in self.components)
-		total_labor = sum(flt(c.amount_labor) for c in self.components)
-		self.out_material_rate = total_material
-		self.out_labor_rate = total_labor
-		self.out_total_rate = total_material + total_labor
+		self.out_material_rate = flt(total_material)
+		self.out_labor_rate = flt(total_labor)
+		self.out_total_rate = flt(total_material) + flt(total_labor)
 
 
 @frappe.whitelist()

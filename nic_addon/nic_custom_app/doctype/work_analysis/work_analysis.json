@@ -15,8 +15,19 @@
   "analysis_type",
   "analysis_code",
   "analysis_name",
+  "item_code",
+  "item_name",
+  "brand",
   "alias",
   "uom",
+  "simple_rates_section",
+  "material_rate",
+  "material_percentage",
+  "item_price",
+  "item_price_rate",
+  "column_break_simple",
+  "labor_rate",
+  "labor_percentage",
   "components_section_section",
   "components",
   "total_section_section",
@@ -50,24 +61,19 @@
    "fieldname": "analysis_type",
    "fieldtype": "Select",
    "label": "Analysis Type",
-   "options": "Simple\nComposite"
+   "options": "Simple\nComposite",
+   "reqd": 1
   },
   {
    "depends_on": "eval:doc.analysis_type == \"Composite\"",
    "fieldname": "analysis_code",
    "fieldtype": "Link",
    "label": "Analysis Code",
+   "mandatory_depends_on": "eval:doc.analysis_type == \"Composite\"",
    "options": "Item"
   },
   {
-   "depends_on": "analysis_code",
-   "description": "<p style=\"color:#ff0000; font-weight:400; font-size:12px;\">\n    Change the alias to match the corresponding BOQ item for the customer.\n</p>",
-   "fieldname": "alias",
-   "fieldtype": "Data",
-   "label": "Alias",
-   "mandatory_depends_on": "analysis_code"
-  },
-  {
+   "depends_on": "eval:doc.analysis_type == \"Composite\"",
    "fetch_from": "analysis_code.item_name",
    "fieldname": "analysis_name",
    "fieldtype": "Data",
@@ -75,24 +81,106 @@
    "read_only": 1
   },
   {
-   "depends_on": "analysis_code",
-   "fetch_from": "analysis_code.stock_uom",
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "mandatory_depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "options": "Item"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fetch_from": "item_code.brand",
+   "fieldname": "brand",
+   "fieldtype": "Link",
+   "label": "Brand",
+   "options": "Brand",
+   "read_only": 1
+  },
+  {
+   "depends_on": "analysis_type",
+   "description": "<p style=\"color:#ff0000; font-weight:400; font-size:12px;\">\n    Change the alias to match the corresponding BOQ item for the customer.\n</p>",
+   "fieldname": "alias",
+   "fieldtype": "Data",
+   "label": "Alias"
+  },
+  {
+   "depends_on": "analysis_type",
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
    "options": "UOM"
   },
   {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fieldname": "simple_rates_section",
+   "fieldtype": "Section Break",
+   "label": "Rates"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fieldname": "material_rate",
+   "fieldtype": "Currency",
+   "label": "Material Rate"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fieldname": "material_percentage",
+   "fieldtype": "Percent",
+   "label": "Material Percentage"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fieldname": "item_price",
+   "fieldtype": "Link",
+   "label": "Item Price",
+   "options": "Item Price"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fetch_from": "item_price.price_list_rate",
+   "fieldname": "item_price_rate",
+   "fieldtype": "Currency",
+   "label": "Item Price Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_simple",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fieldname": "labor_rate",
+   "fieldtype": "Currency",
+   "label": "Labor Rate"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Simple\"",
+   "fieldname": "labor_percentage",
+   "fieldtype": "Percent",
+   "label": "Labor Percentage"
+  },
+  {
+   "depends_on": "eval:doc.analysis_type == \"Composite\"",
    "fieldname": "components_section_section",
    "fieldtype": "Section Break",
    "label": "Components Section"
   },
   {
+   "depends_on": "eval:doc.analysis_type == \"Composite\"",
    "fieldname": "components",
    "fieldtype": "Table",
    "label": "Components",
-   "options": "Work Analysis Component",
-   "reqd": 1
+   "mandatory_depends_on": "eval:doc.analysis_type == \"Composite\"",
+   "options": "Work Analysis Component"
   },
   {
    "fieldname": "total_section_section",
@@ -100,21 +188,18 @@
    "label": "Total Section"
   },
   {
-   "depends_on": "eval:doc.analysis_type == \"Composite\"",
    "fieldname": "out_material_rate",
    "fieldtype": "Currency",
    "label": "Out Material Rate",
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.analysis_type == \"Composite\"",
    "fieldname": "out_labor_rate",
    "fieldtype": "Currency",
    "label": "Out Labor Rate",
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.analysis_type == \"Composite\"",
    "fieldname": "out_total_rate",
    "fieldtype": "Currency",
    "label": "Out Total rate",
@@ -153,7 +238,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-07-08 01:33:34.680835",
+ "modified": "2026-07-16 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "NIC Custom App",
  "name": "Work Analysis",

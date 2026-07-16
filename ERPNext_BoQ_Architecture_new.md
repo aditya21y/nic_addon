@@ -1,384 +1,257 @@
-# ERPNext BoQ / MEP Estimation System — Architecture
+# NIC BoQ / MEP Estimation System — Architecture (as built)
 
+**App:** `nic_addon` · module **NIC Custom App**
 **Source analysed:** `BQ_Eproc_MEP_Proyek_Pondok_Pesantren_Al-Khoziny_Sidoarjo_R01.xlsx`
-**Target:** Custom Frappe/ERPNext app — full lifecycle (estimation → execution), shared master library.
+**Scope of this doc:** the estimation lifecycle actually implemented — master unit-rate library → priced BoQ → project budget (RAPP). Execution (award → Sales Order) is on the roadmap (§10).
+
+> This document reflects the **real DocTypes and formulas in the codebase**, verified to the rupiah against the source spreadsheet (§9).
 
 ---
 
-## 1. The one idea that makes this clean
+## 1. The core idea
 
-Your spreadsheet looks like "thousands of rows per project", but 90% of that weight is **shared master data**, not project data. Once you separate the two, a 1,000-line project becomes 1,000 *references* to a library, not 1,000 fat records.
+A 1,000-line project is 90% **shared master data**, not project data. Separate the two and each BoQ line becomes a *reference* to a library, not a fat record.
 
-The other key reframe: **"Analisa" is not a BoQ concept — it is an AHSP (Analisa Harga Satuan Pekerjaan), a reusable unit-rate build-up.** Analisa-1 (single item + accessories) and Analisa-2 (composite/assembly) are the same object with a different number of components. Model them as one library DocType (`Work Analysis`) and the whole system simplifies.
+Two reframes drive the whole design:
 
-### Your current calculation chain (confirmed from the file)
+1. **"Analisa" is an AHSP (reusable unit-rate build-up), not a BoQ concept.** It lives in the master library as **`Work Analysis`**.
+2. **A project is one thing with many disciplines**, not many projects. Disciplines (Elektrikal / Pemadam / Plumbing / …) vary per project (the client bids different tenders) so they are their own master DocType, **`Discipline`**, scoped per project — and each becomes one Sales Order line at award.
 
-| Layer | Excel | What it produces |
-|---|---|---|
-| 1 | `PRICE LIST` (~6,500 rows, multi-supplier) | raw material/labor prices per supplier |
-| 2 | `Analisa-1`, `Analisa-2` | **net** unit rate (material + jasa) per work item |
-| 3 | `Hit.*` (Kabel, PL, PK, HVAC) | volume / quantity takeoff |
-| 4 | `EL_*`, `FF_*`, `PL_*` building sheets | line = (sell_mat + sell_labor) × volume, with per-category margin |
-| 5 | `REKAP_EL/FF/PL`, `REKAP_MEP` | discipline & MEP recap (cost vs sell) |
-| 6 | `RAPP`, `Direct Cost` | APP.1/2/3, profit, offer + PPN |
+### The calculation chain (confirmed from the file)
 
-The markup logic, decoded from `EL_ASRAMA`:
+| Layer | Excel | Becomes | Produces |
+|---|---|---|---|
+| 1 | `PRICE LIST` | `Item` + `Item Price` (native) | raw supplier prices |
+| 2 | `Analisa-1` / `Analisa-2` | **`Work Analysis`** (Simple / Composite) | net unit rate (material + jasa) |
+| 3 | `EL_*`, `FF_*`, `PL_*` sheets | **`BOQ Section`** + **`Boq Item`** | priced lines (net → margin → sell) |
+| 4 | margin table `N2:W4` | **`Margin Profile`** | material/labor margin per category |
+| 5 | `Direct Cost` | **`Direct Cost`** | 4 overhead group subtotals (APP.2) |
+| 6 | `RAPP` | **`BoQ`** (+ `BoQ Recap`) | APP.1/2/3, profit, offer + PPN |
+
+**The single most important formula** — margin-on-selling-price, replicated exactly:
 
 ```
-M = net material rate      (= 'Analisa-1'!Q41  or  'Analisa-2'!I61)
-N = net labor  rate        (= 'Analisa-1'!R41  or  'Analisa-2'!J61)
-R = margin category code   (1–10, e.g. 7 = equipment, 6 = cable)
-S = material margin %       = HLOOKUP(R, margin_table)
-T = labor    margin %       = HLOOKUP(R, margin_table)
-U = sell material rate      = ROUNDUP( M / (1 - S) )     ← margin-on-sell
-V = sell labor    rate      = ROUNDUP( N / (1 - T) )
-line amount  J = (U + V) × volume
-line cost      = (M + N) × volume
+sell_rate = ROUNDUP( net_rate / (1 - margin) )     ← NOT a cost markup
 ```
-
-This `rate / (1 - margin)` formula is the single most important thing to replicate exactly — it is margin-on-selling-price, **not** a cost markup.
 
 ---
 
 ## 2. Three layers, three lifetimes
 
 ```
-MASTER LIBRARY  (shared, lives forever)      ──► referenced by every project
-   Item, Item Price, Work Analysis, Margin Profile, BoQ Settings
+MASTER LIBRARY  (shared, lives forever)
+   Item, Item Price (native) · Work Analysis (+ Component)
+   Margin Profile (+ Component) · Discipline · BoQ Settings
 
-ESTIMATION      (per project + revision)     ──► references master, freezes on award
-   BoQ, BoQ Section, BoQ Item, Quantity Takeoff, Direct Cost, Project Budget
+ESTIMATION      (per project + revision)
+   BOQ Section (+ Boq Item) · Direct Cost (+ Line) · BoQ (+ BoQ Recap)
 
-EXECUTION       (native ERPNext)             ──► generated from the awarded BoQ
-   Quotation/Sales Order, Project, Material Request, Purchase Order,
-   Purchase Receipt/Invoice, Sales Invoice (progress billing)
+EXECUTION       (native ERPNext — roadmap §10)
+   Quotation / Sales Order · Project · Sales Invoice (progress billing)
 ```
 
-The rule that ties them together: **estimation references the library while in Draft, and snapshots fixed rates onto each `BoQ Item` on submit/award.** Master prices keep moving for future tenders; the awarded BoQ never changes underneath you.
+Rule that ties them: **estimation references the library while in Draft, and snapshots net rates onto each `Boq Item` on save/submit.** Master prices keep moving for future tenders; the awarded BoQ never changes underneath you (§6).
 
 ---
 
-## 3. DocType catalog
-
-> ### 📍 Quick map — which Excel sheet becomes which DocType
->
-> Read this table first, then check each DocType against your own file. Every DocType below also has a **📍 Excel source** line telling you exactly where it comes from.
->
-> | Your Excel sheet / area | Becomes this DocType | Layer |
-> |---|---|---|
-> | `PRICE LIST` (the ~6,500-row catalog) | `Item` + `Item Price` | Master |
-> | The supplier name + price columns in `PRICE LIST` / `PL_Eproc` / `PK_Eproc` | `Item Price` (one row per supplier) | Master |
-> | `Analisa-1` (single item + accessories markup) | `Work Analysis` (type = Simple) | Master |
-> | `Analisa-2` (composite / assembly build-up) | `Work Analysis` (type = Composite) | Master |
-> | Each ingredient row *inside* an Analisa block | `Work Analysis Component` | Master |
-> | The "Waste 2%" / "Mat. Bantu 15%" rows inside Analisa | `Work Analysis Component` (type = Percentage) | Master |
-> | The margin table `N2:W4` (codes 1–10) on the rekap/building sheets | `Margin Profile` + `Margin Profile Row` | Master |
-> | `Hit.HVAC`, `Hit.PL`, `Hit.Kabel`, `Hit.PK` (quantity takeoffs) | `Quantity Takeoff` + `Takeoff Line` | Estimation |
-> | One building sheet, e.g. `EL_ASRAMA`, `FF_MASJID`, `PL_SEKOLAH` | `BoQ Section` | Estimation |
-> | One **line** inside a building sheet (the columns E…J + helper M…V) | `BoQ Item` | Estimation |
-> | `REKAP TOTAL_EL` / `_FF` / `_PL` and `REKAP TOTAL_MEP` | *(a report, not a table — see §4)* | Estimation |
-> | The project header info (name, location, revision, schedule, DP) | `BoQ` | Estimation |
-> | `Direct Cost` sheet | `Direct Cost` + `Direct Cost Line` | Estimation |
-> | `RAPP` (APP.1 / APP.2 / APP.3 / profit / offer + PPN) | `Project Budget` | Estimation |
->
-> Sheets like `PL_Original`, `PK_Original`, `REKAP TOTAL_EL` etc. that are *derived* (formulas pointing at other sheets) do **not** each become a table — in ERPNext they become reports or are recomputed live. Only the sheets where you actually *type data* become DocTypes.
+## 3. DocType catalog (as implemented)
 
 ### 3.1 Master library
 
-#### `Item` (native — reuse, don't reinvent)
-Every material and every labor/jasa line. Add custom fields only.
+#### `Item` / `Item Price` (native — reused)
+Every material and service line, and its supplier prices. `Item Price` uses native `valid_from` / `valid_upto` / `supplier` / `buying`. A whitelisted helper `work_analysis.get_item_price(item_code, posting_date)` picks the **latest buying price valid on the posting date** (largest `valid_from ≤ posting_date`, not past `valid_upto`).
 
-> **📍 Excel source:** column **B "NAMA BARANG"** of the `PRICE LIST` sheet (plus `MERK`, `TYPE/SPESIFIKASI`, `UKURAN`, `SAT.`). Each unique product/service becomes one `Item`. This is your master goods-and-services list — the thing that appears over and over across all the building sheets.
+#### `Work Analysis` ⭐ (submittable) — the AHSP library
+One record = one analysed unit rate. Two shapes:
 
-| Field | Type | Notes |
-|---|---|---|
-| item_group | (native) | `Material` or `Jasa / Service`; services have `is_stock_item = 0` |
-| custom_discipline | Select | EL / FF / PL / AC / Common |
-| custom_default_ppn_code | Select | Include / Exclude / Non PPN |
+- **Simple** (was Analisa-1): one item priced **in the header** — `item_code`, `material_rate`, `material_percentage`, `labor_rate`, `labor_percentage`. 1 item = 1 record (light to open/save, flows cleanly to BoQ). The component table is hidden.
+- **Composite** (was Analisa-2): an assembly keyed by `analysis_code` (a **non-stock** Item) with a `components` child table.
 
-#### `Item Price` (native — reuse)
-Normalize the wide multi-supplier `PRICE LIST` into one row per (item, supplier, price list). One `Price List` per supplier (or per `Buying` source).
-
-> **📍 Excel source:** the **price columns** of `PRICE LIST` — `SUPPLIER 1 / NAMA SUPPLIER / HARGA (Rp)`, then `SUPPLIER 2`, `SUPPLIER 3`, etc. across the row. In Excel one item has many supplier columns side-by-side; in ERPNext that becomes **many `Item Price` rows** (one per supplier) for the same item. The `KODE PPN` and `UPDATE` columns map to `ppn_code` and `valid_from`. The cleaned vendor lists in `PL_Eproc` and `PK_Eproc` are the same thing for plumbing and fire-fighting.
-
-| Field | Type | Notes |
-|---|---|---|
-| price_list | Link Price List | one per supplier, e.g. "Supplier – Schneider" |
-| item_code, price_list_rate | (native) | the price |
-| supplier | Link Supplier | who quoted it |
-| custom_ppn_code | Select | Include / Exclude / Non |
-| valid_from | Date | the `UPDATE` column |
-
-A Query Report `Supplier Price Comparison` then reproduces the side-by-side columns + lowest-price pick. Never store supplier prices as columns.
-
-#### `Work Analysis` ⭐ (custom — the AHSP library; replaces Analisa-1 + Analisa-2)
-One record = one analysed unit rate.
-
-> **📍 Excel source:** the `Analisa-1` **and** `Analisa-2` sheets. Each "block" in those sheets — one titled mini-table like *"Tangki Harian 1.000 L"* or *"NYY 4 x 4 mm2 + BC 4 mm2"* with its own `Total` row — becomes **one `Work Analysis` record**. The block's final `Total` for Material and Jasa is what gets stored in `out_material_rate` and `out_labor_rate`. `Analisa-1` blocks are the Simple type (basically one product + an accessories %); `Analisa-2` blocks are the Composite type (several ingredients added up).
-
-| Field | Type | Notes |
-|---|---|---|
-| Project | Link Project |  |
-| posting_date | Date |  |
-| analysis_type | Select | Simple (was Analisa-1) / Composite (was Analisa-2) important |
-| analysis_code | Link Item | e.g. `AN2-NYY-4x4-BC4` if only analysis_type=composite, else dont show this field |
-| alias | Data | to rename item if the name is not the msae as customer boq -> default fetch from item name only show if analysis_type = composite |
-| analysis_name | Data | "NYY 4×4mm² + BC 4mm²" |
-| uom | Link UOM | per Mtr / Set / Unit |
-| **out_material_rate** | Currency, read-only | computed |
-| **out_labor_rate** | Currency, read-only | computed |
-| **out_total_rate** | Currency, read-only | = material + labor |
-| status | Select | Draft / Active / Archived |
-| components | Table → `Work Analysis Component` | |
-
-`Work Analysis Component` (child):
-
-> **📍 Excel source:** the **numbered ingredient rows inside one Analisa block** (the `No. / Uraian / Qty / Sat. / Harga Satuan Material / Jasa` lines). Each of those rows = one `Work Analysis Component`. Think of it like a cooking recipe: the `Work Analysis` is the finished dish ("NYY 4×4 cable run, per meter") and each Component is one ingredient with its quantity and price.
->
-> **Worked example — the `Analisa-2` block "NYY 4 x 4 mm2 + BC 4 mm2" (per Mtr):**
->
-> | Excel row | → becomes a Component with | component_type |
-> |---|---|---|
-> | `1  NYY 4 x 4 mm2 … 1 Mtr … 53450 / 14514` | item = NYY 4×4, qty = 1, material_rate = 53450, labor_rate = 14514 | `Item` |
-> | `2  BC 4 mm2 … 1 Mtr … 11850 / 3629` | item = BC 4mm², qty = 1, material_rate = 11850, labor_rate = 3629 | `Item` |
-> | `3  Waste … 2% … Terhadap Material` | percentage = 2%, percent_base = Material | `Percentage` |
-> | `4  Mat. Bantu, aksesories dll. … 10% … Terhadap Upah` | percentage = 10%, percent_base = Labor | `Percentage` |
->
-> use for anilsa 1 if work analysis.analysis_type = simple and analisa 2 if work analysis.analysis_type = composite
-
-| Field | Type | Notes |
-|---|---|---|
-| item_code | Link Item | |
-| alias | Data | for analisa 1 to rename item if item name is not the same as customer boq -> default fetch from item name only show if analysis_type = simple|
-| item_name | Data | |
-| brand | Link Brand | |
-| qty | Float | only if work analysis.analysis_type = composite |
-| uom | Link UOM | |
-| material_rate | Currency | fetched from Item Price or manual |
-| item_price | Currency | fetched from Item Price or manual |
-| material_percentage | Percent | |
-| labor_rate | Currency | |
-| labor_percentage | Percent | |
-| amount_material | Currency, read-only | qty × material_rate, or %·base only if work analysis.analysis_type = composite|
-| amount_labor | Currency, read-only | |
-
-This one child table covers **everything** in both Analisa sheets: real components are `Item` rows; "Waste 2% terhadap Material" and "Mat. Bantu 15%" become `Percentage` rows. Add a **Refresh rates** button that re-pulls `material_rate` from the chosen `Item Price` (lowest, or a selected supplier).
-
-#### `Margin Profile` (custom — the `N2:W4` lookup table)
-Shared, versioned. A BoQ points to one profile.
-
-> **📍 Excel source:** the little **margin/profit table** sitting top-right on the building and rekap sheets — the `KODE / MATERIAL / UPAH` rows at `N2:W4` (codes 1 to 10, each with a material % and a labor %). This is the table your building sheets do `HLOOKUP` against to mark a net price up to a selling price. One `Margin Profile Row` per code.
-
-| Field | Type |
+| Field | Notes |
 |---|---|
-| profile_name | Data |
-| rows | Table → `Margin Profile Row` |
+| project, posting_date | posting_date drives the price fetch |
+| analysis_type | `Simple` / `Composite` |
+| analysis_code | Composite only · Link Item (non-stock) · the assembly's identity |
+| item_code | Simple only · Link Item · the single analysed item |
+| material_rate, material_percentage | Simple · rate auto-fetched from Item Price by posting_date |
+| labor_rate, labor_percentage | Simple |
+| item_price, item_price_rate | Simple · the resolved Item Price |
+| alias | rename to match the customer BoQ wording |
+| uom | fetched from the item's stock_uom |
+| components | Composite · Table → `Work Analysis Component` |
+| **out_material_rate / out_labor_rate / out_total_rate** | read-only, computed (§4) — the net unit rate consumed by BoQ |
 
-`Margin Profile Row` (child): `category_code` (Int 1–10), `category_name`, `material_margin` (Percent), `labor_margin` (Percent).
+**Validations:** Composite `analysis_code` must be a non-stock Item **and** must not appear among its own components (no self-reference).
 
-#### `BoQ Settings` (custom — Single)
-Defaults: `default_ppn` (11%), `default_margin_profile`, `default_x_factor` (2.5%), financing constants for APP.3 (`bunga_kmk` 5%, `pph` 2.65%, `bank_garansi` 5%, `jaminan` 1.5%, `asuransi` 0.5%), `rounding_digits`.
+`Work Analysis Component` (child, Composite only):
+`item_code, item_name, brand, alias, qty, uom, material_rate, material_percentage, item_price, item_price_rate, labor_rate, labor_percentage, amount_material, amount_labor`. Each ingredient row is `qty × rate`; percentage rows ("Waste 2%") add `% × subtotal`.
 
-> **📍 Excel source:** the **fixed % numbers you hardcode** in `RAPP` — the X-Factor `K26` (2.5%), and the financing rates row `G41:K41` (bunga 5%, PPH 2.65%, bank garansi 5%, jaminan 1.5%, asuransi 0.5%), plus PPN 11%. Instead of retyping them in every project, they live in one settings page.
+#### `Margin Profile` (submittable) — the `N2:W4` lookup
+`is_active`, `project`, `component` (Table). The BoQ engine auto-resolves the **active** profile (project match → project-less → any).
 
----
+`Margin Profile Component` (child): `kode` (`Material` / `Upah`), `number` (category code 1–10), `percentage`, `label`.
+
+#### `Discipline` (master) — the per-project work package
+`discipline_name`, `project` (**mandatory**), `item` (non-stock Item — the future Sales Order line), `is_active`, `description`. A discipline groups several `BOQ Section`s (e.g. EL_Asrama + EL_Sekolah + EL_Masjid = Elektrikal) and is the row RAPP groups by.
+
+#### `BoQ Settings` (Single) — constants
+`default_ppn_percent` (11), `default_x_factor` (2.5), `default_dp_percent` (10), `sell_rate_precision` (2), and APP.3 financing: `bunga_kmk` (5), `pph` (2.65), `bank_garansi` (5), `jaminan` (1.5), `asuransi` (0.5).
 
 ### 3.2 Estimation layer
 
-#### `BoQ` (custom, submittable) — the estimate header (per project + revision)
+#### `BOQ Section` (submittable) — one per building × discipline
+`project`, `boq` (owner, set via BoQ's *Get Sections*), `discipline` (Link, filtered to the project's active disciplines), `building`, `section_name`, `items` (Table → `Boq Item`).
+Computed subtotals (read-only), split for RAPP APP.1: `subtotal_cost_material/labor/cost`, `subtotal_sell_material/labor`, `sub_total`.
 
-> **📍 Excel source:** the **project header block** repeated at the top of `RAPP` and every rekap sheet — `Nama Proyek`, `Lokasi`, `Tgl / Rev.`, `Schedule Proyek (Bulan)` (`H5`), `DP =` (`C7`). One `BoQ` record = one project revision (your `R00`, `R01`). It's the "cover page" that ties all the sections together.
+`Boq Item` (child) — the BoQ line:
 
-| Field | Type | Notes |
-|---|---|---|
-| project | Link Project | optional until award |
-| boq_name, location | Data | |
-| revision | Data | R00, R01… (or use Amend) |
-| date | Date | |
-| status | Select / Workflow | Draft → For Approval → Awarded → Cancelled |
-| margin_profile | Link Margin Profile | |
-| schedule_months | Int | RAPP `H5` |
-| dp_percent | Percent | RAPP `C7` |
-| ppn_percent | Percent | default from settings |
-| sections | Table → `BoQ Section Link` | list/order of sections |
-| total_cost_material / total_cost_labor / total_sell | Currency, read-only | rolled up |
+| Field | Notes |
+|---|---|
+| source_type | Link `Work Analysis` — drives the rate; **filtered** to analyses that price `item_code` in this project (§7) |
+| item_code, alias, description, group_label | line identity |
+| volume, uom | quantity |
+| **net_material / net_labor** | snapshot from `source_type.out_*_rate` |
+| margin_category | the `R` code looked up in the Margin Profile |
+| material_margin / labor_margin | read-only, from Margin Profile by category |
+| **sell_material_rate / sell_labor_rate** | `ROUNDUP(net / (1 − margin), precision)` |
+| **amount** | `(sell_material + sell_labor) × volume` |
+| **cost_amount** | `(net_material + net_labor) × volume` |
 
-#### `BoQ Section` (custom) — **one per building × discipline** (mirrors `EL_ASRAMA`)
-This is the performance keystone: each section holds ~100–250 lines in a child table, never 1,000+ in one place.
+Picking a `source_type` auto-fetches `alias`, `uom`, `net_material`, `net_labor`.
 
-> **📍 Excel source:** **one whole building sheet tab** = one `BoQ Section`. So `EL_ASRAMA` → a section (discipline EL, building Asrama); `FF_MASJID` → a section; `PL_SEKOLAH` → a section, and so on. You have ~12 of these tabs, so you'll have ~12 sections. This is *why* the 1,000+ lines never pile into one place — they're spread across the sections exactly like your tabs already spread them.
+#### `Direct Cost` (submittable) — preliminaries feeding APP.2
+`project`, `boq`, `posting_date`, `lines` (Table → `Direct Cost Line`), and four read-only group totals + grand total: `total_persiapan`, `total_mobdemob`, `total_alat`, `total_management`, `total_direct_cost`.
 
-| Field | Type | Notes |
-|---|---|---|
-| project | Link Project | |
-| section_name | Data | "Pekerjaan Elektrikal – Asrama" |
-| subtotal | Currency, read-only | |
-| items | Table → `BoQ Item` | the lines |
+`Direct Cost Line` (child): `category` (`Persiapan` / `Mob-Demob & Test Com` / `Alat & Perlengkapan` / `Management Proyek`), `description`, `qty`, `uom`, `rate`, `amount` (= qty × rate). Category subtotals map to APP.2.1–2.4.
 
-#### `BoQ Item` (child of `BoQ Section`) — the BoQ line
+#### `BoQ` (submittable) — the offer & profit model (RAPP)
+The project cover page + RAPP engine.
 
-> **📍 Excel source:** **one line row inside a building sheet** — e.g. row 41 of `EL_ASRAMA`, *"PP-1, NYY 4 x 4 mm2 + BC 4 mm2"*. The visible columns (`E` description, `F` volume, `G` unit, `H/I` unit prices, `J` total) plus the hidden helper columns (`M/N` net rates pulled from Analisa, `R` margin code, `U/V` selling rates) all collapse into the fields below.
->
-> **Worked example — `EL_ASRAMA` row 41:**
->
-> | Excel cell | Value / formula | → BoQ Item field |
-> |---|---|---|
-> | `E41` | "PP-1, NYY 4×4mm² + BC 4mm²" | `description` |
-> | `M41 = 'Analisa-2'!I61` | net material 68421 | `net_material_rate` (snapshot from `Work Analysis`) |
-> | `N41 = 'Analisa-2'!J61` | net labor 18143 | `net_labor_rate` |
-> | `F41 = Hit.Kabel!D46` | volume (meters) | `volume` (from `Quantity Takeoff`) |
-> | `R41` | 6 | `margin_category` |
-> | `U41 = ROUNDUP(M41/(1−S41))` | selling material | `sell_material_rate` (auto) |
-> | `J41 = (H41+I41)*F41` | line total | `amount` (auto) |
->
-> So the row you type by hand in Excel becomes: *pick a `Work Analysis`* (gives the net rates), *set volume*, *set margin code* — and ERPNext computes the selling rates and the line total for you, identical to your `U/V/J` formulas.
+| Field | Notes |
+|---|---|
+| project, boq_name, location, revision, date, status | header |
+| schedule_months, ppn_percent, dp_percent, x_factor | params (default from `BoQ Settings`) |
+| direct_cost | Link — else auto-resolved by project |
+| recap | Table → `BoQ Recap` (one row per discipline) |
+| subtotal_cost, subtotal_offer | Σ budget / Σ penawaran |
+| total_app2, total_app3, total_app, total_profit | rolled up |
+| **offer_with_ppn** | `subtotal_offer × (1 + ppn)` — RAPP `E5` |
 
-| Field | Type | Notes |
-|---|---|---|
-| item_no | Data | 1, 2, 3… |
-| group_code / group_label | Data | "1.1 / Panel", "1.2 / Pengkabelan" |
-| description | Small Text | |
-| source_type | Select | Work Analysis / Item / Manual |
-| work_analysis | Link Work Analysis | drives the rate |
-| item | Link Item | when source = Item |
-| volume | Float | manual or fetched from Quantity Takeoff |
-| uom | Link UOM | |
-| **net_material_rate** | Currency | fetched from `work_analysis.out_material_rate`, **snapshotted on submit** |
-| **net_labor_rate** | Currency | snapshotted |
-| margin_category | Int | the `R` code |
-| material_margin / labor_margin | Percent, read-only | looked up from Margin Profile |
-| **sell_material_rate** | Currency, read-only | `roundup(net_material/(1−material_margin))` |
-| **sell_labor_rate** | Currency, read-only | `roundup(net_labor/(1−labor_margin))` |
-| **amount** | Currency, read-only | `(sell_material+sell_labor) × volume` |
-| **cost_amount** | Currency, read-only | `(net_material+net_labor) × volume` |
+**`Get Sections`** button attaches every project `BOQ Section` not yet owned by a BoQ, then rebuilds the recap.
 
-#### `Direct Cost` (custom — feeds APP.2)
-Header + child lines grouped: Persiapan/Direksi Kit, Mob-Demob/Perizinan/Test-Com, Alat/K3/APD, Management Proyek. Mirrors `Direct Cost` sheet rows `R41/R72/R81/R102`.
-
-> **📍 Excel source:** the `Direct Cost` sheet — your **preliminaries / overhead** (site office, mob-demob, permits, test & commissioning, tools, K3/HSE, project management). The four group subtotals at rows `R41 / R72 / R81 / R102` are what `RAPP` pulls into APP.2.
-
-#### `Project Budget (RAPP)` (custom) — the offer & profit model
-
-> **📍 Excel source:** the entire `RAPP` sheet. APP.1 = the *"Real Cost / Budget VS Penawaran"* block (rows 12–22); APP.2 = the prelim/overhead block (rows 24–37); APP.3 = the financing block (rows 39–52); then *Total APP* (54–67), *Profit* (69+), and the final `Penawaran + PPN 11%` at `E5`. One `Project Budget` record per BoQ revision.
-
-| Block | Source | Formula |
-|---|---|---|
-| **APP.1** budget vs offer per discipline | BoQ recap | cost (O/P/Q) vs sell (W/X/Y) per discipline |
-| **APP.2** prelim/overhead | Direct Cost + x-factor | `(direct_cost / subtotal_APP1) × disciplineSell + sell × x_factor` |
-| **APP.3** financing | BoQ Settings % | bunga, PPH, bank garansi, jaminan, asuransi (the `G41:K41` constants) |
-| **Total APP** | | APP.1 + APP.2 + APP.3 |
-| **Profit** | | `offer − Total APP` |
-| **Offer + PPN** | | `subtotal_APP1 × (1 + ppn)` |
+`BoQ Recap` (child, per discipline): `discipline`, `discipline_name`, `cost_material/labor/total`, `sell_material/labor/total`, `app2`, `app3`, `total_app`, `profit`.
 
 ---
 
-### 3.3 Execution layer (native ERPNext — the "full lifecycle" half)
+## 4. The calculation engine (all server-side in `validate`)
 
-On **BoQ → Awarded**, generate:
-
-| From estimation | Native target | Purpose |
-|---|---|---|
-| BoQ Items (sell side) | **Quotation → Sales Order** | the client offer; basis for billing |
-| BoQ + sections/groups | **Project + Tasks** | execution structure |
-| BoQ cost side (net mat+labor) | **Project budget baseline** | the "Budget" column in APP.1 variance |
-| BoQ Items where source = Item/material | **Material Request → Purchase Order → Purchase Receipt/Invoice** | procurement; actual buy cost lands on the project |
-| BoQ Items where source = Jasa | **Purchase Order (service)** / Job Card | subcontract labor |
-| % progress per item/section | **Sales Invoice (percentage billing)** | progress claims |
-
-This closes the loop your `RAPP` only models on paper: **actual** PO/invoice cost vs the **budget** baseline = real-time version of APP.1's "Real Cost / Budget VS Penawaran".
-
----
-
-### 3.4 Follow ONE line all the way up (plain language)
-
-If the layers still feel abstract, trace a single real line — *"PP-1, NYY 4×4mm² cable"* — from the bottom of your file to the final offer. Every arrow below is a real link in the system:
-
-1. **`PRICE LIST`** has the raw price of `NYY 4×4mm²` cable and `BC 4mm²` wire from your suppliers → these become **`Item`** + **`Item Price`** records.
-2. In **`Analisa-2`**, the block *"NYY 4×4mm² + BC 4mm²"* adds those two items together with 2% waste and 10% accessories → this whole block becomes **one `Work Analysis`**, and its `Total` (68,421 material / 18,143 labor per meter) is the **net unit rate**.
-3. In **`Hit.Kabel`** you calculate there are, say, 120 meters of this cable → becomes a **`Quantity Takeoff`** giving `volume = 120`.
-4. In **`EL_ASRAMA`** row 41, you write the line: it pulls the net rate from Analisa-2, the volume from Hit.Kabel, applies margin code 6 from the **`Margin Profile`** to get the selling price, and multiplies by 120 → this is **one `BoQ Item`** inside the **`BoQ Section`** "EL – Asrama".
-5. All the lines in that sheet sum to the sheet subtotal; all the EL sheets sum in **`REKAP TOTAL_EL`**; EL+FF+PL sum in **`REKAP TOTAL_MEP`** → in ERPNext this is a **report** that adds up the `BoQ Item` amounts (no extra table needed).
-6. **`RAPP`** takes that grand total, adds prelims (APP.2 from **`Direct Cost`**), adds financing (APP.3), subtracts it all to show **profit**, and adds PPN 11% for the final offer → becomes **`Project Budget`**.
-
-That's the whole spreadsheet, in one sentence: **raw prices → analysed unit rates → priced BoQ lines → recap → project budget.** The DocTypes are just those six stops with names.
-
----
-
-## 4. Where each calculation lives (the engine)
-
-Do all math **server-side in `validate`** (bulk per document), never per-row client round-trips — that is what keeps 1,000 lines fast.
+Do all math per-document in `validate()`, never per-row client round-trips — that keeps 1,000 lines fast. Client scripts only mirror the math for live feedback.
 
 | DocType | `validate()` does |
 |---|---|
-| `Work Analysis` | sum components (items: qty×rate; percentages: %·base) → set `out_material_rate`, `out_labor_rate`, `out_total_rate` |
-| `BoQ Section` | for each `BoQ Item`: fetch margins from the BoQ's Margin Profile by `margin_category`; compute `sell_*_rate = roundup(net/(1−margin))`, `amount`, `cost_amount`; then `subtotal_*` |
-| `BoQ` | aggregate sections → `total_*` |
-| `Project Budget` | pull BoQ recap + Direct Cost + financing → APP.1/2/3, profit, offer+PPN |
+| `Work Analysis` | **Simple:** `out_material = material_rate × (1 + material_percentage/100)` (labor likewise). **Composite:** each component `amount = qty×rate + percentage% × (Σ qty×rate)`; `out_* = Σ component amounts`. |
+| `BOQ Section` | per `Boq Item`: snapshot `net_*` from the Work Analysis `out_*`; look up `material/labor_margin` from the active Margin Profile by `margin_category`; `sell_*_rate = ROUNDUP(net / (1 − margin/100), precision)`; `amount`, `cost_amount`; then the split subtotals. |
+| `Direct Cost` | `amount = qty × rate` per line; sum per category → the four APP.2 totals + grand total. |
+| `BoQ` | group owned sections by discipline → APP.1; APP.2/APP.3 per discipline (below); Total APP, Profit, Offer+PPN. |
 
-**Recap (`REKAP_*`) is a report, not stored data.** Build a Query Report / Dashboard that groups `BoQ Item` by discipline and building and sums `cost_amount` vs `amount`. Don't duplicate totals into records you have to keep in sync.
-
----
-
-## 5. Handling 1,000+ lines (performance)
-
-1. **Split by section.** ~12 sections (4 buildings × 3 disciplines) × ~100–250 lines = comfortable child tables. One 1,000-row child table is the thing that makes ERPNext crawl — avoid it.
-2. **Master data is referenced, not copied.** A `BoQ Item` stores a Link + a few numbers, not the full analysis. The 6,500 prices and ~580 analyses exist once.
-3. **Bulk `validate`,** no per-row client scripts. Compute the whole section in one Python pass.
-4. **Snapshot on submit.** Store `net_*_rate` on the item at award so you never re-query the library for a frozen BoQ (and so master price changes don't rewrite history).
-5. **Recap via SQL/report,** not stored rollups.
-6. **Import masters via Data Import / CSV** (Section 7), not manual entry.
-
----
-
-## 6. Rate snapshotting (the shared-library safety net)
+### RAPP formulas (per discipline) — verified to the rupiah
 
 ```
-Draft BoQ      : BoQ Item.net_rate  ← live fetch from Work Analysis (always current)
-On submit/award: copy Work Analysis.out_*_rate → BoQ Item.net_*_rate  (frozen)
-Future projects: master prices update freely; awarded BoQ is untouched
-Re-price a draft: "Refresh rates" button re-pulls; submitted docs need an Amend
+offer_share  = sell_total / Σ sell_total(all disciplines)
+APP.1 budget = cost_total          (Σ cost_amount)
+APP.1 offer  = sell_total          (Σ amount)
+
+APP.2 = direct_cost_pool × offer_share  +  sell_total × x_factor
+        (direct_cost_pool = persiapan + mobdemob + alat + management)
+
+DP_base = sell_total × dp_percent × (1 + ppn)          ← DP incl. PPN
+APP.3   = sell_total × bunga_kmk
+        + sell_total × pph
+        + DP_base    × bank_garansi
+        + DP_base    × jaminan
+        + sell_total × asuransi
+
+Total APP = cost_total + APP.2 + APP.3
+Profit    = sell_total − Total APP
+Offer+PPN = Σ sell_total × (1 + ppn)
 ```
 
-Implement with a `fetch_from` for live draft display **plus** an explicit copy in `on_submit`. This is the single most important behaviour for "shared library + full lifecycle" to coexist safely.
+---
+
+## 5. Price fetch & posting date
+
+In **Work Analysis**, setting `item_code` (Simple) or a component's `item_code` (Composite) calls `get_item_price` to pull the buying `Item Price` valid on the analysis `posting_date`: latest `valid_from ≤ posting_date`, not past `valid_upto`. Changing the posting date re-prices every line.
 
 ---
 
-## 7. Migrating the existing Excel
+## 6. Rate snapshotting (shared-library safety net)
 
-Scripted, in this order (each is a `frappe.get_doc(...).insert()` loop or a Data Import):
-
-1. **PRICE LIST → Item + Item Price.** Dedupe items by (nama_barang + merk + type + ukuran). Each supplier column → one `Item Price` row under that supplier's Price List. Carry `KODE PPN` and `UPDATE`.
-2. **Margin table (`N2:W4`) → Margin Profile** (codes 1–10, material/labor %).
-3. **Analisa-1 + Analisa-2 → Work Analysis.** Each analysis block = one `Work Analysis`; component lines = `Item` child rows; "Waste %" / "Mat. Bantu %" = `Percentage` child rows. Keep a mapping `{excel_cell_ref → analysis_code}` (e.g. `Analisa-2!I61 → AN2-NYY-4x4-BC4`) — you need it for step 5.
-4. **`Hit.*` → Quantity Takeoff** (optional first pass: just import resulting volumes).
-5. **Building sheets → BoQ Section + BoQ Item.** For each line, resolve its `='Analisa-X'!...` reference through the step-3 mapping to set `work_analysis`; set `volume`, `margin_category` (the `R` value), `group_code`.
-6. **RAPP + Direct Cost → Project Budget + Direct Cost.**
-
-A Python pre-processor (openpyxl/pandas) that emits clean CSVs per DocType is the fastest path; ERPNext Data Import ingests the CSVs.
+```
+Draft    : Boq Item.net_*  ← live from Work Analysis.out_*_rate (recomputed each save)
+On submit : the same save freezes the values (submitted docs are locked)
+Future    : master prices move freely; the submitted BoQ is untouched
+Re-price a draft: re-open source_type / re-save; submitted docs need an Amend
+```
 
 ---
 
-## 8. Build roadmap
+## 7. UX helpers & guards
 
-| Phase | Deliverable | Outcome |
+- **`source_type` filter** (`work_analysis_query`): a `Boq Item` only offers Work Analyses that price its `item_code` — matching **`item_code` for Simple** and **`analysis_code` for Composite** (the "two item fields" case) — scoped to the project (+ shared, project-less analyses).
+- **`discipline` filter**: only the section project's active disciplines.
+- **`analysis_code` / component filters**: only non-stock items; a component can't be the assembly item itself.
+- **Connections dashboards**: `Work Analysis → BOQ Section`; `BOQ Section → Work Analysis, Item`; `BoQ → BOQ Section, Direct Cost`.
+
+---
+
+## 8. Handling 1,000+ lines (performance)
+
+1. **Split by section** (~12 sections × 100–250 lines) — never one 1,000-row table.
+2. **Master data referenced, not copied** — a `Boq Item` stores a Link + a few numbers.
+3. **Bulk `validate`**, no per-row client round-trips.
+4. **Snapshot on save/submit** so history is frozen.
+5. **1 item = 1 Simple Work Analysis** — light docs instead of a 250-row book.
+
+---
+
+## 9. Parity with Excel (verified)
+
+Reproduced from the source `RAPP` sheet, to the rupiah:
+
+| Output | System | Excel |
 |---|---|---|
-| 0 | App scaffold `boq`, `BoQ Settings`, UOM/Item Group setup | foundation |
-| 1 | `Item` + `Item Price` + import PRICE LIST; Supplier Comparison report | master prices live |
-| 2 | `Work Analysis` (+ components, Refresh rates); import Analisa-1/2 | unit-rate library live |
-| 3 | `Margin Profile`; `BoQ` + `BoQ Section` + `BoQ Item` + calc engine | a project BoQ computes end-to-end |
-| 4 | `Direct Cost` + `Project Budget` (APP.1/2/3, profit, PPN); REKAP report | full offer reproduces the Excel |
-| 5 | Award → Quotation/SO + Project + Material Request/PO; cost-vs-budget | execution lifecycle |
-| 6 | `Quantity Takeoff`; progress billing (Sales Invoice %) | full lifecycle |
+| Penawaran (excl PPN) | 8,680,000,000 | 8,680,000,000 |
+| APP.2 total | 1,424,600,000 | 1,424,600,000 |
+| APP.3 total | 770,046,200 | 770,046,200 |
+| Total Profit | 1,715,301,788 | 1,715,301,788 |
+| **Penawaran + PPN** | **9,634,800,000** | **9,634,800,000** |
 
-Phases 1–4 reproduce your spreadsheet exactly; 5–6 are the upgrade the spreadsheet can't do.
+Per-discipline APP.2 / APP.3 / Total APP / Profit also match (e.g. Elektrikal APP.2 = 569,511,751). `Total APP` differs by ≤ 1 rupiah (float rounding).
 
 ---
 
-## 9. Validation checks (prove parity with Excel)
+## 10. Reporting & roadmap
 
-- Pick 5 `Work Analysis` records; their `out_total_rate` must equal the Excel "Total" cell to the rupiah.
-- Pick 5 `BoQ Item` lines; `sell_material_rate` must equal `ROUNDUP(M/(1−S))` from the sheet.
-- A full `BoQ` discipline subtotal must equal `REKAP_*!I30`.
-- `Project Budget` offer+PPN must equal `RAPP!E5`.
+**Built**
+- Full estimation chain: Work Analysis → BOQ Section → BoQ (RAPP) with the calc engine above.
+- **RAPP Print Format** on `BoQ` (module print format, Jinja) reproducing the Excel RAPP layout (APP.1 cost-vs-offer, APP.2/3/Total/Profit, Offer+PPN).
+- Connections dashboards; link-query and validation guards.
 
-Lock these as automated tests so future master-price edits never silently break a tendered number.
+**Pending**
+- **Award → Quotation / Sales Order**: each `Discipline` becomes one lump-sum SO line via `Discipline.item`; progress billing (Sales Invoice %) per discipline.
+- **APP.2 / APP.3 sub-column detail** stored on `BoQ Recap` for a fully itemised RAPP.
+- **REKAP query report** (discipline × building) and **Quantity Takeoff** (auditable volumes).
+
+---
+
+## 11. DocType quick reference
+
+| DocType | Type | Key role |
+|---|---|---|
+| Work Analysis (+ Component) | submittable | net unit-rate library (Simple / Composite) |
+| Margin Profile (+ Component) | submittable | material/labor margin by category |
+| Discipline | master | per-project work package → SO line |
+| BoQ Settings | single | PPN, X-Factor, DP, financing constants |
+| BOQ Section (+ Boq Item) | submittable | priced lines; cost & sell subtotals |
+| Direct Cost (+ Line) | submittable | 4 overhead group totals → APP.2 |
+| BoQ (+ BoQ Recap) | submittable | RAPP: APP.1/2/3, profit, offer + PPN |

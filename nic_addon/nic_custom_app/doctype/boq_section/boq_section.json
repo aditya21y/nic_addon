@@ -10,10 +10,20 @@
   "section_break_pcde",
   "naming_series",
   "project",
+  "boq",
+  "discipline",
+  "building",
   "column_break_tcgf",
   "section_name",
   "section_break_noi1",
   "items",
+  "totals_section",
+  "subtotal_cost_material",
+  "subtotal_cost_labor",
+  "subtotal_cost",
+  "column_break_totals",
+  "subtotal_sell_material",
+  "subtotal_sell_labor",
   "sub_total",
   "amended_from"
  ],
@@ -33,7 +43,29 @@
    "fieldname": "project",
    "fieldtype": "Link",
    "label": "Project",
-   "options": "Project"
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "description": "The BoQ / offer this section belongs to (set via BoQ's Get Sections).",
+   "fieldname": "boq",
+   "fieldtype": "Link",
+   "label": "BoQ",
+   "options": "BoQ"
+  },
+  {
+   "description": "Work package this section rolls up into (RAPP APP.1 groups by this).",
+   "fieldname": "discipline",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Discipline",
+   "options": "Discipline",
+   "reqd": 1
+  },
+  {
+   "fieldname": "building",
+   "fieldtype": "Data",
+   "label": "Building"
   },
   {
    "fieldname": "column_break_tcgf",
@@ -57,9 +89,51 @@
    "options": "Boq Item"
   },
   {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "subtotal_cost_material",
+   "fieldtype": "Currency",
+   "label": "Cost Material",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subtotal_cost_labor",
+   "fieldtype": "Currency",
+   "label": "Cost Labor",
+   "read_only": 1
+  },
+  {
+   "description": "Budget side of RAPP APP.1 (net material + labor).",
+   "fieldname": "subtotal_cost",
+   "fieldtype": "Currency",
+   "label": "Subtotal Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "subtotal_sell_material",
+   "fieldtype": "Currency",
+   "label": "Sell Material",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subtotal_sell_labor",
+   "fieldtype": "Currency",
+   "label": "Sell Labor",
+   "read_only": 1
+  },
+  {
+   "description": "Offer side of RAPP APP.1 (selling).",
    "fieldname": "sub_total",
    "fieldtype": "Currency",
-   "label": "Sub Total"
+   "label": "Sub Total (Sell)",
+   "read_only": 1
   },
   {
    "fieldname": "amended_from",

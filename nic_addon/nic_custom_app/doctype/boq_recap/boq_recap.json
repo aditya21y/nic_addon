@@ -1,0 +1,167 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-16 13:30:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "discipline_section",
+  "discipline",
+  "column_break_oayu",
+  "discipline_name",
+  "app_1_section",
+  "cost_material",
+  "cost_labor",
+  "cost_total",
+  "column_break_jpat",
+  "sell_material",
+  "sell_labor",
+  "sell_total",
+  "app_2_section",
+  "app2",
+  "app_3_section",
+  "app3",
+  "total_section",
+  "total_app",
+  "column_break_rniw",
+  "profit"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "discipline",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Discipline",
+   "options": "Discipline",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "discipline.discipline_name",
+   "fieldname": "discipline_name",
+   "fieldtype": "Data",
+   "label": "Discipline Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cost_material",
+   "fieldtype": "Currency",
+   "label": "Cost Material",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cost_labor",
+   "fieldtype": "Currency",
+   "label": "Cost Labor",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "cost_total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Budget (APP.1)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sell_material",
+   "fieldtype": "Currency",
+   "label": "Sell Material",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sell_labor",
+   "fieldtype": "Currency",
+   "label": "Sell Labor",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "sell_total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Penawaran",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app2",
+   "fieldtype": "Currency",
+   "label": "APP.2 (Overhead)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app3",
+   "fieldtype": "Currency",
+   "label": "APP.3 (Financing)",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "total_app",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total APP",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "profit",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Profit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discipline_section",
+   "fieldtype": "Section Break",
+   "label": "Discipline"
+  },
+  {
+   "fieldname": "column_break_oayu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "app_1_section",
+   "fieldtype": "Section Break",
+   "label": "App 1"
+  },
+  {
+   "fieldname": "column_break_jpat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "app_2_section",
+   "fieldtype": "Section Break",
+   "label": "App 2"
+  },
+  {
+   "fieldname": "app_3_section",
+   "fieldtype": "Section Break",
+   "label": "App 3"
+  },
+  {
+   "fieldname": "total_section",
+   "fieldtype": "Section Break",
+   "label": "Total"
+  },
+  {
+   "fieldname": "column_break_rniw",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-17 01:16:01.135191",
+ "modified_by": "Administrator",
+ "module": "NIC Custom App",
+ "name": "BoQ Recap",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

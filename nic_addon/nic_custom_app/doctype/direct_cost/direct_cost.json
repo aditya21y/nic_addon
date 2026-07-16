@@ -1,0 +1,157 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-16 13:22:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_head",
+  "naming_series",
+  "project",
+  "posting_date",
+  "column_break_head",
+  "boq",
+  "lines_section",
+  "lines",
+  "totals_section",
+  "total_persiapan",
+  "total_mobdemob",
+  "total_alat",
+  "column_break_totals",
+  "total_management",
+  "total_direct_cost",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_head",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "DC-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "DC-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The BoQ / offer this preliminaries budget feeds (APP.2).",
+   "fieldname": "boq",
+   "fieldtype": "Link",
+   "label": "BoQ",
+   "options": "BoQ"
+  },
+  {
+   "fieldname": "lines_section",
+   "fieldtype": "Section Break",
+   "label": "Lines"
+  },
+  {
+   "fieldname": "lines",
+   "fieldtype": "Table",
+   "label": "Lines",
+   "options": "Direct Cost Line"
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Group Totals (feed RAPP APP.2)"
+  },
+  {
+   "fieldname": "total_persiapan",
+   "fieldtype": "Currency",
+   "label": "Persiapan (APP.2.1)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_mobdemob",
+   "fieldtype": "Currency",
+   "label": "Mob-Demob & Test Com (APP.2.2)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_alat",
+   "fieldtype": "Currency",
+   "label": "Alat & Perlengkapan (APP.2.3)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_management",
+   "fieldtype": "Currency",
+   "label": "Management Proyek (APP.2.4)",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "total_direct_cost",
+   "fieldtype": "Currency",
+   "label": "Total Direct Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Direct Cost",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-16 13:22:00.000000",
+ "modified_by": "Administrator",
+ "module": "NIC Custom App",
+ "name": "Direct Cost",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
