@@ -19,8 +19,18 @@
   "sell_labor",
   "sell_total",
   "app_2_section",
+  "app2_persiapan",
+  "app2_mobdemob",
+  "app2_alat",
+  "app2_management",
+  "app2_xfactor",
   "app2",
   "app_3_section",
+  "app3_bunga",
+  "app3_pph",
+  "app3_bank_garansi",
+  "app3_jaminan",
+  "app3_asuransi",
   "app3",
   "total_section",
   "total_app",
@@ -85,15 +95,77 @@
    "read_only": 1
   },
   {
-   "fieldname": "app2",
+   "fieldname": "app2_persiapan",
    "fieldtype": "Currency",
-   "label": "APP.2 (Overhead)",
+   "label": "Persiapan",
    "read_only": 1
   },
   {
+   "fieldname": "app2_mobdemob",
+   "fieldtype": "Currency",
+   "label": "Mob-Demob & Test Com",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app2_alat",
+   "fieldtype": "Currency",
+   "label": "Alat & Perlengkapan",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app2_management",
+   "fieldtype": "Currency",
+   "label": "Management Proyek",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app2_xfactor",
+   "fieldtype": "Currency",
+   "label": "X-Factor",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "app2",
+   "fieldtype": "Currency",
+   "label": "APP.2 Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app3_bunga",
+   "fieldtype": "Currency",
+   "label": "Bunga KMK / SCF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app3_pph",
+   "fieldtype": "Currency",
+   "label": "PPH",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app3_bank_garansi",
+   "fieldtype": "Currency",
+   "label": "Bank Garansi",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app3_jaminan",
+   "fieldtype": "Currency",
+   "label": "Jaminan Pelaksanaan",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app3_asuransi",
+   "fieldtype": "Currency",
+   "label": "Asuransi",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
    "fieldname": "app3",
    "fieldtype": "Currency",
-   "label": "APP.3 (Financing)",
+   "label": "APP.3 Total",
    "read_only": 1
   },
   {

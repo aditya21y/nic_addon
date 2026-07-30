@@ -86,9 +86,6 @@ class BoQ(Document):
 		dc = get_direct_cost_totals(
 			project=self.project, boq=self.name, direct_cost=self.direct_cost
 		)
-		direct_cost_pool = flt(dc.get("total_persiapan")) + flt(dc.get("total_mobdemob")) + flt(
-			dc.get("total_alat")
-		) + flt(dc.get("total_management"))
 		total_offer = sum(flt(d["sell_material"]) + flt(d["sell_labor"]) for d in disciplines.values())
 
 		# 3) One recap row per discipline.
@@ -99,16 +96,22 @@ class BoQ(Document):
 			sell_total = flt(d["sell_material"]) + flt(d["sell_labor"])
 			share = (sell_total / total_offer) if total_offer else 0.0
 
-			app2 = flt(direct_cost_pool * share + sell_total * x_factor)
+			# APP.2 — each Direct Cost group allocated by offer share, plus x-factor.
+			app2_persiapan = flt(flt(dc.get("total_persiapan")) * share)
+			app2_mobdemob = flt(flt(dc.get("total_mobdemob")) * share)
+			app2_alat = flt(flt(dc.get("total_alat")) * share)
+			app2_management = flt(flt(dc.get("total_management")) * share)
+			app2_xfactor = flt(sell_total * x_factor)
+			app2 = flt(app2_persiapan + app2_mobdemob + app2_alat + app2_management + app2_xfactor)
 
-			dp_base = sell_total * dp * (1 + ppn)  # DP incl. PPN
-			app3 = flt(
-				sell_total * flt(settings.bunga_kmk) / 100.0
-				+ sell_total * flt(settings.pph) / 100.0
-				+ dp_base * flt(settings.bank_garansi) / 100.0
-				+ dp_base * flt(settings.jaminan) / 100.0
-				+ sell_total * flt(settings.asuransi) / 100.0
-			)
+			# APP.3 — financing. Bank Garansi & Jaminan are against DP (incl. PPN).
+			dp_base = sell_total * dp * (1 + ppn)
+			app3_bunga = flt(sell_total * flt(settings.bunga_kmk) / 100.0)
+			app3_pph = flt(sell_total * flt(settings.pph) / 100.0)
+			app3_bank_garansi = flt(dp_base * flt(settings.bank_garansi) / 100.0)
+			app3_jaminan = flt(dp_base * flt(settings.jaminan) / 100.0)
+			app3_asuransi = flt(sell_total * flt(settings.asuransi) / 100.0)
+			app3 = flt(app3_bunga + app3_pph + app3_bank_garansi + app3_jaminan + app3_asuransi)
 
 			total_app = flt(cost_total + app2 + app3)
 			profit = flt(sell_total - total_app)
@@ -124,7 +127,17 @@ class BoQ(Document):
 					"sell_material": flt(d["sell_material"]),
 					"sell_labor": flt(d["sell_labor"]),
 					"sell_total": sell_total,
+					"app2_persiapan": app2_persiapan,
+					"app2_mobdemob": app2_mobdemob,
+					"app2_alat": app2_alat,
+					"app2_management": app2_management,
+					"app2_xfactor": app2_xfactor,
 					"app2": app2,
+					"app3_bunga": app3_bunga,
+					"app3_pph": app3_pph,
+					"app3_bank_garansi": app3_bank_garansi,
+					"app3_jaminan": app3_jaminan,
+					"app3_asuransi": app3_asuransi,
 					"app3": app3,
 					"total_app": total_app,
 					"profit": profit,
