@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{color-scheme:light dark}
+html,body{margin:0}
+body{font:14px system-ui,-apple-system,'Segoe UI',sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Alur BoQ NIC Addon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;600&display=swap">
+
+<style>
+:root{
+  --paper:#F1F5F6; --surface:#FFFFFF; --surface-2:#E6EDEF;
+  --ink:#0F191F; --ink-2:#48595F; --ink-3:#7A8A90;
+  --rule:#D2DCDF; --rule-2:#B4C4C9;
+  --accent:#0D6C7B; --accent-bg:#DFEDEF; --accent-2:#0A545F;
+  --gold:#8A6210; --gold-bg:#F5EDDA;
+  --profit:#146A4B; --profit-bg:#E0EFE9;
+  --danger:#9C3529; --danger-bg:#F6E6E3;
+  --sans:'Archivo','Helvetica Neue',Arial,sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+  --shadow:0 1px 1px rgba(15,25,31,.05),0 10px 28px -18px rgba(15,25,31,.4);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0A1115; --surface:#111B20; --surface-2:#182428;
+    --ink:#E3ECEE; --ink-2:#9DB1B7; --ink-3:#72868C;
+    --rule:#223237; --rule-2:#32464C;
+    --accent:#5AC7D7; --accent-bg:#0D2A30; --accent-2:#8BDAE6;
+    --gold:#D9AC55; --gold-bg:#2A2113;
+    --profit:#57C295; --profit-bg:#0F271E;
+    --danger:#E08C7E; --danger-bg:#2A1714;
+    --shadow:0 1px 1px rgba(0,0,0,.4),0 12px 30px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0A1115; --surface:#111B20; --surface-2:#182428;
+  --ink:#E3ECEE; --ink-2:#9DB1B7; --ink-3:#72868C;
+  --rule:#223237; --rule-2:#32464C;
+  --accent:#5AC7D7; --accent-bg:#0D2A30; --accent-2:#8BDAE6;
+  --gold:#D9AC55; --gold-bg:#2A2113;
+  --profit:#57C295; --profit-bg:#0F271E;
+  --danger:#E08C7E; --danger-bg:#2A1714;
+  --shadow:0 1px 1px rgba(0,0,0,.4),0 12px 30px -20px rgba(0,0,0,.9);
+}
+
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased;}
+*,*::before,*::after{box-sizing:border-box}
+a{color:var(--accent);text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.wrap{max-width:1040px;margin:0 auto;padding:0 28px 96px}
+.prose{max-width:66ch}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:1px solid var(--rule-2);padding:52px 0 26px;margin-bottom:40px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 16px}
+h1{font-family:var(--sans);font-weight:700;font-size:clamp(34px,5.6vw,54px);line-height:1.02;letter-spacing:-.025em;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--ink-3)}
+.dek{font-size:18px;color:var(--ink-2);margin:18px 0 0;max-width:60ch}
+.mast-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 9px;border:1px solid var(--rule-2);border-radius:2px;color:var(--ink-2)}
+
+/* ---------- headings ---------- */
+h2{font-family:var(--sans);font-weight:600;font-size:26px;letter-spacing:-.018em;line-height:1.15;margin:0;text-wrap:balance}
+h3{font-family:var(--sans);font-weight:600;font-size:17px;letter-spacing:-.008em;margin:0 0 6px;text-wrap:balance}
+.band{padding-top:56px}
+.band-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:26px}
+.band-num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.08em;flex:none;padding-top:4px}
+.band-note{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto;flex:none;letter-spacing:.04em}
+
+code,.dt{font-family:var(--mono);font-size:.83em}
+.dt{background:var(--surface-2);border-radius:2px;padding:1.5px 5px;color:var(--ink);white-space:nowrap}
+.fld{font-family:var(--mono);font-size:.83em;color:var(--accent-2)}
+
+/* ---------- diagram ---------- */
+figure{margin:0}
+.figbox{background:var(--surface);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);padding:14px 10px 6px;overflow-x:auto}
+.dg{display:block;width:100%;min-width:660px;height:auto;color:var(--ink)}
+.dg-box{fill:var(--surface);stroke:var(--rule-2);stroke-width:1.2}
+.dg-box-key{fill:var(--surface);stroke:var(--accent);stroke-width:1.7}
+.dg-box-ghost{fill:none;stroke:var(--rule-2);stroke-width:1.2;stroke-dasharray:5 4}
+.dg-t{font-family:var(--sans);font-size:13.5px;font-weight:600;fill:var(--ink)}
+.dg-s{font-family:var(--mono);font-size:10.5px;fill:var(--ink-2)}
+.dg-l{font-family:var(--sans);font-size:11.5px;fill:var(--ink-2)}
+.dg-lk{font-family:var(--sans);font-size:11.5px;font-weight:600;fill:var(--accent-2)}
+.dg-line{stroke:var(--accent);stroke-width:1.8;fill:none}
+.ah-a{fill:var(--accent)}
+.ah-g{fill:var(--rule-2)}
+.dg-feed{stroke:var(--rule-2);stroke-width:1.3;fill:none}
+.dg-ghostline{stroke:var(--rule-2);stroke-width:1.3;fill:none;stroke-dasharray:5 4}
+figcaption{font-size:14px;color:var(--ink-2);margin-top:14px;max-width:66ch}
+
+/* ---------- steps ---------- */
+.steps{display:flex;flex-direction:column;gap:2px}
+.step{display:grid;grid-template-columns:56px 1fr;gap:20px;padding:20px 0;border-top:1px solid var(--rule)}
+.step:first-child{border-top:none;padding-top:4px}
+.step-n{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-3);padding-top:5px;letter-spacing:.04em}
+.step p{margin:0;color:var(--ink-2);max-width:64ch}
+.step p + p{margin-top:9px}
+.step .who{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 9px}
+.calc{margin-top:12px;border-left:2px solid var(--accent);padding:2px 0 2px 14px;font-size:14.5px;color:var(--ink-2);max-width:64ch}
+.calc b{font-family:var(--sans);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:3px;font-weight:600}
+
+/* ---------- formula tiles ---------- */
+.forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.form{background:var(--surface);padding:20px 22px}
+.form h3{margin-bottom:10px}
+.form pre{font-family:var(--mono);font-size:12.5px;line-height:1.75;margin:0 0 10px;color:var(--accent-2);white-space:pre-wrap;word-break:break-word}
+.form p{margin:0;font-size:14.5px;color:var(--ink-2)}
+
+/* ---------- traps ---------- */
+.traps{display:flex;flex-direction:column;gap:14px}
+.trap{display:grid;grid-template-columns:104px 1fr;gap:18px;align-items:start;padding:15px 18px;background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--gold);border-radius:2px}
+.trap.hard{border-left-color:var(--danger)}
+.trap-k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding-top:3px}
+.trap.hard .trap-k{color:var(--danger)}
+.trap p{margin:0;font-size:15px;color:var(--ink-2)}
+.trap b{color:var(--ink);font-weight:600}
+
+/* ---------- order strip ---------- */
+.order{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;color:var(--ink-2);background:var(--accent-bg);border-radius:3px;padding:16px 20px}
+.order span{color:var(--accent-2);font-weight:500}
+.order i{font-style:normal;color:var(--ink-3)}
+
+@media (max-width:640px){
+  .wrap{padding:0 18px 72px}
+  .step{grid-template-columns:1fr;gap:8px}
+  .step-n{padding-top:0}
+  .trap{grid-template-columns:1fr;gap:6px}
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">nic_addon · NIC Custom App</p>
+  <h1>Alur bikin BoQ,<br><em>dari harga satuan sampai profit</em></h1>
+  <p class="dek">Lima fase, sembilan DocType. Yang diketik user cuma volume, margin category, dan daftar direct cost — sisanya dihitung engine waktu <code>validate()</code>.</p>
+  <div class="mast-meta">
+    <span class="tag">Work Analysis</span>
+    <span class="tag">BOQ Section</span>
+    <span class="tag">Direct Cost</span>
+    <span class="tag">BoQ / RAPP</span>
+  </div>
+</header>
+
+<figure>
+  <div class="figbox">
+    <svg class="dg" viewBox="0 0 900 750" role="img" aria-label="Diagram alur data BoQ: Item Price mengisi Work Analysis, Work Analysis di-snapshot ke Boq Item dalam BOQ Section, tombol Get Sections menarik section ke BoQ, dengan Discipline dan Margin Profile masuk ke Section serta Direct Cost dan BoQ Settings masuk ke BoQ.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="ah-a" d="M0,0 L10,5 L0,10 z"></path>
+        </marker>
+        <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="ah-g" d="M0,0 L10,5 L0,10 z"></path>
+        </marker>
+      </defs>
+
+      <!-- spine -->
+      <rect class="dg-box" x="140" y="24" width="280" height="72" rx="3"></rect>
+      <text class="dg-t" x="158" y="50">Item + Item Price</text>
+      <text class="dg-s" x="158" y="68">native ERPNext · harga beli supplier</text>
+      <text class="dg-s" x="158" y="84">buying=1 · valid_from / valid_upto</text>
+
+      <rect class="dg-box-key" x="140" y="170" width="280" height="72" rx="3"></rect>
+      <text class="dg-t" x="158" y="196">Work Analysis</text>
+      <text class="dg-s" x="158" y="214">Simple (header) / Composite (rakitan)</text>
+      <text class="dg-s" x="158" y="230">out_material_rate · out_labor_rate</text>
+
+      <rect class="dg-box-key" x="140" y="326" width="280" height="96" rx="3"></rect>
+      <text class="dg-t" x="158" y="352">BOQ Section + Boq Item</text>
+      <text class="dg-s" x="158" y="370">satu per gedung x disiplin</text>
+      <text class="dg-s" x="158" y="386">input: volume, margin_category</text>
+      <text class="dg-s" x="158" y="402">hasil: sell rate, amount, subtotal</text>
+
+      <rect class="dg-box-key" x="140" y="506" width="280" height="96" rx="3"></rect>
+      <text class="dg-t" x="158" y="532">BoQ — lembar RAPP</text>
+      <text class="dg-s" x="158" y="550">recap 1 baris per disiplin</text>
+      <text class="dg-s" x="158" y="566">APP.1 + APP.2 + APP.3</text>
+      <text class="dg-s" x="158" y="582">profit · penawaran + PPN</text>
+
+      <rect class="dg-box-ghost" x="180" y="680" width="200" height="48" rx="3"></rect>
+      <text class="dg-t" x="198" y="702">Sales Order</text>
+      <text class="dg-s" x="198" y="718">1 baris per disiplin · roadmap</text>
+
+      <!-- spine arrows -->
+      <line class="dg-line" x1="280" y1="96" x2="280" y2="164" marker-end="url(#ah)"></line>
+      <text class="dg-lk" x="294" y="120">get_item_price()</text>
+      <text class="dg-l" x="294" y="135">harga yang valid pada posting_date</text>
+
+      <line class="dg-line" x1="280" y1="242" x2="280" y2="320" marker-end="url(#ah)"></line>
+      <text class="dg-lk" x="294" y="272">snapshot net_material / net_labor</text>
+      <text class="dg-l" x="294" y="287">disegarkan tiap save selama draft</text>
+
+      <line class="dg-line" x1="280" y1="422" x2="280" y2="500" marker-end="url(#ah)"></line>
+      <text class="dg-lk" x="294" y="452">tombol Get Sections</text>
+      <text class="dg-l" x="294" y="467">isi field boq, lalu recap dibangun ulang</text>
+
+      <line class="dg-ghostline" x1="280" y1="602" x2="280" y2="674" marker-end="url(#ahg)"></line>
+      <text class="dg-l" x="294" y="642">setelah status Awarded</text>
+
+      <!-- feeders -->
+      <rect class="dg-box" x="600" y="320" width="280" height="48" rx="3"></rect>
+      <text class="dg-t" x="616" y="342">Discipline</text>
+      <text class="dg-s" x="616" y="358">per proyek · is_active · item non-stock</text>
+      <line class="dg-feed" x1="596" y1="344" x2="426" y2="344" marker-end="url(#ahg)"></line>
+      <text class="dg-l" x="511" y="337" text-anchor="middle">grup disiplin</text>
+
+      <rect class="dg-box" x="600" y="382" width="280" height="48" rx="3"></rect>
+      <text class="dg-t" x="616" y="404">Margin Profile</text>
+      <text class="dg-s" x="616" y="420">is_active · Material / Upah x kode 1-10</text>
+      <line class="dg-feed" x1="596" y1="406" x2="426" y2="406" marker-end="url(#ahg)"></line>
+      <text class="dg-l" x="511" y="399" text-anchor="middle">margin %</text>
+
+      <rect class="dg-box" x="600" y="500" width="280" height="48" rx="3"></rect>
+      <text class="dg-t" x="616" y="522">Direct Cost</text>
+      <text class="dg-s" x="616" y="538">wajib submitted · 4 group total</text>
+      <line class="dg-feed" x1="596" y1="524" x2="426" y2="524" marker-end="url(#ahg)"></line>
+      <text class="dg-l" x="511" y="517" text-anchor="middle">pool APP.2</text>
+
+      <rect class="dg-box" x="600" y="562" width="280" height="48" rx="3"></rect>
+      <text class="dg-t" x="616" y="584">BoQ Settings</text>
+      <text class="dg-s" x="616" y="600">PPN · x-factor · DP · bunga · pph</text>
+      <line class="dg-feed" x1="596" y1="586" x2="426" y2="586" marker-end="url(#ahg)"></line>
+      <text class="dg-l" x="511" y="579" text-anchor="middle">parameter</text>
+    </svg>
+  </div>
+  <figcaption>Rantai biru adalah jalur angka: harga item naik jadi harga satuan, harga satuan disalin ke baris BoQ, baris BoQ diagregat per disiplin. Panah abu-abu adalah master yang dibaca engine waktu save — kalau salah satunya kosong atau masih draft, angkanya tetap keluar, cuma nol.</figcaption>
+</figure>
+
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">FASE 01</span>
+    <h2>Siapkan master</h2>
+    <span class="band-note">sekali per sistem / proyek</span>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div>
+        <div class="who"><span class="dt">BoQ Settings</span></div>
+        <h3>Isi konstanta perusahaan</h3>
+        <p>Single doctype. Default <span class="fld">ppn_percent</span> 11, <span class="fld">x_factor</span> 2.5, <span class="fld">dp_percent</span> 10, plus lima angka pembiayaan APP.3: <span class="fld">bunga_kmk</span>, <span class="fld">pph</span>, <span class="fld">bank_garansi</span>, <span class="fld">jaminan</span>, <span class="fld">asuransi</span>.</p>
+        <div class="calc"><b>otomatis</b>Tiga parameter pertama disalin ke BoQ baru hanya kalau field-nya masih kosong, jadi override per-BoQ tetap aman.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">2</div>
+      <div>
+        <div class="who"><span class="dt">Item</span><span class="dt">Item Price</span></div>
+        <h3>Masukkan price list</h3>
+        <p>Pakai Item &amp; Item Price bawaan ERPNext. Harga harus <span class="fld">buying = 1</span>, dan isi <span class="fld">valid_from</span> supaya bisa ditarik per tanggal.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">3</div>
+      <div>
+        <div class="who"><span class="dt">Discipline</span></div>
+        <h3>Daftarkan disiplin proyek</h3>
+        <p>Elektrikal, Pemadam, Plumbing — dibuat per proyek, jadi <span class="fld">project</span> wajib. Field <span class="fld">item</span> harus Item non-stock; kalau stock item, validate langsung throw. Disiplin ini yang jadi baris recap di RAPP, dan nanti jadi baris Sales Order.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">4</div>
+      <div>
+        <div class="who"><span class="dt">Margin Profile</span></div>
+        <h3>Set tabel margin</h3>
+        <p>Centang <span class="fld">is_active</span>, isi komponen: <span class="fld">kode</span> (Material atau Upah), <span class="fld">number</span> = kode kategori 1–10, dan <span class="fld">percentage</span>.</p>
+        <div class="calc"><b>resolusi profil</b>Profil aktif untuk proyek ini → profil aktif tanpa proyek → profil aktif mana saja. Yang pertama ketemu dipakai.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">FASE 02</span>
+    <h2>Bangun library analisa</h2>
+    <span class="band-note">Work Analysis · submittable</span>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">5</div>
+      <div>
+        <div class="who"><span class="dt">Work Analysis</span><span class="dt">tipe Simple</span></div>
+        <h3>Satu item, dihargai di header</h3>
+        <p>Isi <span class="fld">item_code</span>, <span class="fld">posting_date</span>, lalu <span class="fld">material_rate</span> ditarik dari Item Price yang valid di tanggal itu. Tambah <span class="fld">material_percentage</span> / <span class="fld">labor_percentage</span> untuk waste atau overhead.</p>
+        <div class="calc"><b>hasil</b><code>out_material_rate = material_rate × (1 + material_percentage/100)</code>, sama untuk labor.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">6</div>
+      <div>
+        <div class="who"><span class="dt">Work Analysis</span><span class="dt">tipe Composite</span></div>
+        <h3>Rakitan dari beberapa bahan</h3>
+        <p><span class="fld">analysis_code</span> diisi Item non-stock yang jadi identitas rakitan, lalu isi tabel <span class="fld">components</span>. Dua validasi jalan di sini: analysis_code harus non-stock, dan tidak boleh muncul sebagai komponennya sendiri.</p>
+        <div class="calc"><b>dua pass</b>Pass pertama menjumlahkan <code>qty × rate</code> jadi basis. Pass kedua: tiap baris = <code>qty × rate + (percentage/100 × basis)</code> — jadi baris "Waste 2%" berlaku terhadap seluruh subtotal, bukan terhadap barisnya sendiri.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">7</div>
+      <div>
+        <h3>Submit</h3>
+        <p>Setelah submit, <span class="fld">out_material_rate</span> dan <span class="fld">out_labor_rate</span> siap dikonsumsi BoQ. Ini net rate — belum ada margin sama sekali.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">FASE 03</span>
+    <h2>Isi BOQ Section</h2>
+    <span class="band-note">satu per gedung × disiplin</span>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">8</div>
+      <div>
+        <div class="who"><span class="dt">BOQ Section</span></div>
+        <h3>Buat section-nya</h3>
+        <p>Isi <span class="fld">project</span>, <span class="fld">discipline</span> (link-nya sudah difilter ke disiplin aktif proyek ini), <span class="fld">building</span>, <span class="fld">section_name</span>. Field <span class="fld">boq</span> biarkan kosong — nanti diisi otomatis.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">9</div>
+      <div>
+        <div class="who"><span class="dt">Boq Item</span></div>
+        <h3>Tambah baris pekerjaan</h3>
+        <p>Pilih <span class="fld">item_code</span>, lalu <span class="fld">source_type</span> — link Work Analysis yang sudah difilter ke analisa yang benar-benar menghargai item itu (cocok <span class="fld">item_code</span> untuk Simple, <span class="fld">analysis_code</span> untuk Composite) dan terbatas ke proyek ini plus analisa milik bersama.</p>
+        <p>Begitu source_type dipilih, <span class="fld">alias</span>, <span class="fld">uom</span>, <span class="fld">net_material</span>, <span class="fld">net_labor</span> keisi sendiri. Yang tinggal diketik: <span class="fld">volume</span> dan <span class="fld">margin_category</span>.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">10</div>
+      <div>
+        <h3>Save — di sini semua harga jadi</h3>
+        <div class="calc"><b>per baris</b>Net rate disegarkan ulang dari Work Analysis, margin dicari lewat pasangan <code>(margin_category, "Material")</code> dan <code>(margin_category, "Upah")</code>, sell rate dihitung, lalu <code>amount</code> dan <code>cost_amount</code>.</div>
+        <div class="calc"><b>per section</b>Enam subtotal: cost material, cost labor, cost total, sell material, sell labor, sub_total. Enam angka inilah yang dibaca RAPP.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">11</div>
+      <div>
+        <h3>Submit — angka membeku</h3>
+        <p>Selama masih draft, tiap save narik ulang rate dari Work Analysis. Setelah submit tidak ada save lagi, jadi harga master boleh terus bergerak untuk tender berikutnya tanpa mengubah section yang sudah jadi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">FASE 04</span>
+    <h2>Direct Cost</h2>
+    <span class="band-note">preliminaries → APP.2</span>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">12</div>
+      <div>
+        <div class="who"><span class="dt">Direct Cost</span></div>
+        <h3>Daftar biaya tak langsung</h3>
+        <p>Isi <span class="fld">project</span>, <span class="fld">posting_date</span>, lalu tiap baris diberi <span class="fld">category</span>: Persiapan, Mob-Demob &amp; Test Com, Alat &amp; Perlengkapan, atau Management Proyek. Empat kategori itu persis empat kolom APP.2.1–2.4.</p>
+        <div class="calc"><b>hasil</b><code>amount = qty × rate</code>, dijumlah per kategori jadi <span class="fld">total_persiapan</span>, <span class="fld">total_mobdemob</span>, <span class="fld">total_alat</span>, <span class="fld">total_management</span>, plus grand total.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">13</div>
+      <div>
+        <h3>Submit — ini tidak opsional</h3>
+        <p>Resolver hanya melihat Direct Cost dengan <span class="fld">docstatus = 1</span>. Selama masih draft, keempat pool APP.2 dibaca kosong dan BoQ tetap tersimpan dengan profit yang kelihatan terlalu bagus.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">FASE 05</span>
+    <h2>Rakit BoQ — lembar RAPP</h2>
+    <span class="band-note">satu dokumen per revisi penawaran</span>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">14</div>
+      <div>
+        <div class="who"><span class="dt">BoQ</span></div>
+        <h3>Buat header</h3>
+        <p>Isi <span class="fld">project</span>, <span class="fld">date</span>, <span class="fld">boq_name</span>, <span class="fld">location</span>, <span class="fld">revision</span>. Parameter yang dibiarkan kosong diisi dari BoQ Settings begitu form dibuka.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">15</div>
+      <div>
+        <h3>Tautkan Direct Cost</h3>
+        <p>Field <span class="fld">direct_cost</span> sudah difilter ke Direct Cost proyek ini yang sudah submitted. Kalau dikosongkan, resolver mencari sendiri: yang <span class="fld">boq</span>-nya menunjuk BoQ ini, kalau tidak ada baru yang terbaru untuk proyek ini.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">16</div>
+      <div>
+        <h3>Klik <em>Get Sections</em></h3>
+        <p>Tombolnya muncul saat BoQ masih draft dan project sudah diisi. Semua BOQ Section proyek ini yang field <span class="fld">boq</span>-nya masih kosong ditandai milik BoQ ini, lalu recap dibangun dan dokumen langsung disave.</p>
+        <div class="calc"><b>catatan</b>Section yang sudah punya pemilik tidak akan berpindah. Kalau ada section baru dibuat setelah tombol ditekan, tekan lagi.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">17</div>
+      <div>
+        <div class="who"><span class="dt">BoQ Recap</span></div>
+        <h3>Recap terbentuk sendiri</h3>
+        <p>Section diagregat per disiplin, tiap disiplin dapat porsi dari total penawaran, dan porsi itu dipakai membagi pool Direct Cost. Rumus lengkapnya di bawah.</p>
+        <div class="calc"><b>header</b>Total budget, total penawaran, APP.2, APP.3, total APP, total profit, dan penawaran + PPN — semuanya read-only, dihitung tiap save.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">18</div>
+      <div>
+        <h3>Review, set status, submit</h3>
+        <p>Cek kolom profit per disiplin dulu. <span class="fld">status</span> jalan Draft → For Approval → Awarded → Cancelled.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">RUMUS</span>
+    <h2>Lima perhitungan yang menentukan</h2>
+  </div>
+
+  <div class="forms">
+    <div class="form">
+      <h3>Harga jual per baris</h3>
+      <pre>sell_rate = ROUNDUP(
+    net_rate / (1 - margin), 2
+)</pre>
+      <p>Margin di atas harga jual, bukan markup di atas biaya. Margin 20% berarti bagi 0,8 — bukan kali 1,2. Margin ≥ 100% ditolak dengan pesan error di baris yang bersangkutan.</p>
+    </div>
+
+    <div class="form">
+      <h3>Porsi tiap disiplin</h3>
+      <pre>share = sell_total disiplin
+        / total penawaran</pre>
+      <p>Semua biaya bersama dibagi memakai porsi penawaran ini, bukan porsi biaya. Disiplin dengan margin tinggi otomatis menanggung overhead lebih besar.</p>
+    </div>
+
+    <div class="form">
+      <h3>APP.2 — overhead proyek</h3>
+      <pre>(persiapan + mobdemob
+ + alat + management) × share
++ sell_total × x_factor</pre>
+      <p>Empat pool dari Direct Cost dibagi menurut porsi, lalu ditambah x-factor sebagai cadangan tak terduga terhadap nilai penawaran disiplin itu.</p>
+    </div>
+
+    <div class="form">
+      <h3>APP.3 — biaya pembiayaan</h3>
+      <pre>dp_base = sell_total
+        × dp% × (1 + ppn)
+
+sell × (bunga + pph + asuransi)
++ dp_base × (bank_garansi + jaminan)</pre>
+      <p>Bunga, PPh, dan asuransi dihitung atas nilai penawaran. Bank garansi dan jaminan pelaksanaan dihitung atas uang muka termasuk PPN — bukan atas nilai kontrak.</p>
+    </div>
+
+    <div class="form">
+      <h3>Profit</h3>
+      <pre>total_app = cost_total
+          + APP.2 + APP.3
+
+profit = sell_total - total_app</pre>
+      <p>APP.1 adalah cost_total (material + upah net dari section). Profit dihitung per disiplin lalu dijumlah ke header.</p>
+    </div>
+
+    <div class="form">
+      <h3>Nilai penawaran</h3>
+      <pre>offer_with_ppn =
+    subtotal_offer × (1 + ppn)</pre>
+      <p>Angka yang muncul di cover RAPP. <code>subtotal_offer</code> adalah jumlah sell semua disiplin, belum kena PPN.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">JEBAKAN</span>
+    <h2>Yang bikin angka salah tanpa error</h2>
+  </div>
+
+  <div class="traps">
+    <div class="trap hard">
+      <div class="trap-k">senyap</div>
+      <p><b>Direct Cost masih draft.</b> APP.2 tinggal x-factor doang, profit kelihatan naik puluhan juta. Tidak ada peringatan apa pun — submit dulu Direct Cost-nya, baru tekan Get Sections.</p>
+    </div>
+    <div class="trap hard">
+      <div class="trap-k">senyap</div>
+      <p><b><span class="fld">margin_category</span> kosong atau tidak ada di Margin Profile.</b> Lookup meleset, margin jadi 0, dan <code>sell_rate</code> sama persis dengan net rate. Section tetap tersimpan, tapi penawarannya dijual seharga modal.</p>
+    </div>
+    <div class="trap hard">
+      <div class="trap-k">senyap</div>
+      <p><b>Tidak ada Margin Profile yang <span class="fld">is_active</span>.</b> Lookup mengembalikan tabel kosong, efeknya sama dengan di atas — semua margin nol untuk seluruh section.</p>
+    </div>
+    <div class="trap">
+      <div class="trap-k">urutan</div>
+      <p><b>Section dibuat setelah Get Sections ditekan.</b> Section baru tidak ikut terpungut. Tekan tombolnya lagi selagi BoQ masih draft.</p>
+    </div>
+    <div class="trap">
+      <div class="trap-k">filter</div>
+      <p><b>Disiplin beda proyek tidak muncul.</b> Link discipline difilter ke <span class="fld">project</span> + <span class="fld">is_active</span>. Kalau daftarnya kosong, biasanya Discipline-nya belum dibuat untuk proyek ini.</p>
+    </div>
+    <div class="trap">
+      <div class="trap-k">cancel</div>
+      <p><b>Section yang di-cancel tetap memegang field <span class="fld">boq</span>,</b> tapi tidak dihitung di recap karena filter <span class="fld">docstatus &lt; 2</span>. Aman, cuma jangan bingung kalau totalnya turun.</p>
+    </div>
+    <div class="trap">
+      <div class="trap-k">desain</div>
+      <p><b>Ubah Item Price tidak mengubah BoQ yang sudah submit.</b> Ini memang disengaja: net rate di-snapshot ke tiap Boq Item. Untuk memperbarui, amend section-nya.</p>
+    </div>
+  </div>
+
+  <div class="order" style="margin-top:30px">
+    <i>urutan submit yang aman</i>
+    <span>Work Analysis</span><i>→</i>
+    <span>BOQ Section</span><i>→</i>
+    <span>Direct Cost</span><i>→</i>
+    <span>Get Sections</span><i>→</i>
+    <span>BoQ</span>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
